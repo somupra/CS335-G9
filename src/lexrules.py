@@ -153,7 +153,7 @@ def t_STRING(t) :
     t.value = str(t.value)
     return t
 
-any  =  r'|(\\n)'+\
+any  =  r'(\\n)'+\
         r'|(\\a)'+\
         r'|(\\b)'+\
         r'|(\\f)'+\
