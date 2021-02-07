@@ -36,6 +36,12 @@ if __name__ == '__main__':
     row_format = "{:<"+ str(max_col_width + 2) +"}" 
     row_format = row_format * (len(output[0])+1)
 
+    print('-'*((max_col_width + 2)*4))
+    header = ['TOKEN', 'LEXEME', 'ROW', 'COLUMN']
+    header_string = row_format.format("", *header)
+    print(header_string.strip())
+    print('-'*((max_col_width + 2)*4))
+
     for op in output:
         op_string = row_format.format("", *op)
         print(op_string.strip())

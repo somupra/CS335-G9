@@ -120,17 +120,26 @@ def t_NEWLINE(t) :
 	global current_linepos
 	current_linepos = t.lexer.lexpos
 
+def t_VARIABLE(t):
+    r'[a-zA-Z][a-zA-Z_0-9]*'
+    return t
+
+def t_COMMENT(t) :
+	r"\/\/.*|\/\*(.|\n)*\*\/"
+	t.lexer.lineno += t.value.count('\n')
+
+
 hex         = r'[a-fA-F0-9]'
 exp         = r'[Ee][+-]?' + digit + r'+'
 fs          = r'(f|F|l|L)'
 ls          = r'(u|U|l|L)*'
 
 number  =   r'((' + digit + r')*\.(' + digit + r')+(' + exp + r')?(' + fs + r')?)'     +\
-            r'|(' + digit + r'*\.(' + digit + r')*((' + exp + r')?' + fs + r'?))'       +\
-            r'|(' + digit + r'+(' + exp + r')(' + fs + r')?)'                           +\
+            r'|(' + digit + r'*\.(' + digit + r')*((' + exp + r')?' + fs + r'?))'      +\
+            r'|(' + digit + r'+(' + exp + r')(' + fs + r')?)'                          +\
             r'|(0[xX](' + hex + r')+(' + ls + r')?)'                                   +\
-            r'|((0)*(' + digit + r')+(' + ls + r')?)'                                   +\
-            r'|((' + digit + r')+(' + ls + r')?)'                                       +\
+            r'|((0)*(' + digit + r')+(' + ls + r')?)'                                  +\
+            r'|((' + digit + r')+(' + ls + r')?)'                                      +\
             r'|' + digit
 
 # number = r'(' + digit + r'*\.(' + digit + r')*((' + exp + r')?' + fs + r'?))'
@@ -144,18 +153,29 @@ def t_STRING(t) :
     t.value = str(t.value)
     return t
 
+any  =  r'|(\\n)' +\
+        r'|(\\a)'+\
+        r'|(\\b)'+\
+        r'|(\\f)'+\
+        r'|(\\r)'+\
+        r'|(\\t)'+\
+        r'|(\\v)'+\
+        r'|(\\x)'+\
+        r'|(\\u)'+\
+        r'|(\\U)'+\
+        r'|(\')'+\
+        r'|(\")'+\
+        r'|(\?)'+\
+        r'|(\\)'+\
+        r'|(.)'
+
+char_const = r'\'(' + any + r')+\''
+
+@TOKEN(char_const)
 def t_CHAR_CONST(t) :
-	r'\'(.|\\n)\''
+	# r'\'(.|\\n)\''
 	return t
 
-def t_VARIABLE(t):
-  r'[a-zA-Z][a-zA-Z_0-9]*'
-  return t
-
-def t_COMMENT(t) :
-	r"\/\/.*|\/\*(.|\n)*\*\/"
-	t.lexer.lineno += t.value.count('\n')
-
 def t_error(t) :
-    print('.....ERROR......')
+    # print('ERROR at (val, line, col) :: {} {} {}'.format(t.value, t.lineno, t.lexpos))
     t.lexer.skip(1)
