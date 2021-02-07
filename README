@@ -1,0 +1,6 @@
+Firstly, install the required packages in your python virtual environment: pip install -r requirements.txt
+
+To run the testcases:
+
+./runTests.sh
+

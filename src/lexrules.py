@@ -126,12 +126,14 @@ fs          = r'(f|F|l|L)'
 ls          = r'(u|U|l|L)*'
 
 number  =   r'((' + digit + r')*\.(' + digit + r')+(' + exp + r')?(' + fs + r')?)'     +\
-            r'|(' + digit + r'\.(' + digit + r')*((' + exp + r')?(' + fs + r')))'       +\
+            r'|(' + digit + r'*\.(' + digit + r')*((' + exp + r')?' + fs + r'?))'       +\
             r'|(' + digit + r'+(' + exp + r')(' + fs + r')?)'                           +\
             r'|(0[xX](' + hex + r')+(' + ls + r')?)'                                   +\
             r'|((0)*(' + digit + r')+(' + ls + r')?)'                                   +\
             r'|((' + digit + r')+(' + ls + r')?)'                                       +\
             r'|' + digit
+
+# number = r'(' + digit + r'*\.(' + digit + r')*((' + exp + r')?' + fs + r'?))'
 
 @TOKEN(number)
 def t_NUMBER(t) :
@@ -143,7 +145,7 @@ def t_STRING(t) :
     return t
 
 def t_CHAR_CONST(t) :
-	r'\'(.|\n)\''
+	r'\'(.|\\n)\''
 	return t
 
 def t_VARIABLE(t):
@@ -157,7 +159,3 @@ def t_COMMENT(t) :
 def t_error(t) :
     print('.....ERROR......')
     t.lexer.skip(1)
-
-def find_column(input, token):
-    line_start = input.rfind('\n', 0, token.lexpos) + 1
-    return (token.lexpos - line_start) + 1
