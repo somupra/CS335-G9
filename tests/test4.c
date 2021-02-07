@@ -6,3 +6,5 @@ char c4 = '\b';
 char c5 = '\n';
 char c6 = '\\';
 char c7 = '?';
+char c8 = '\'';
+char c9 = '\"';

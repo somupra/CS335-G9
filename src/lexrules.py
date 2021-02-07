@@ -149,11 +149,11 @@ def t_NUMBER(t) :
     return t
 
 def t_STRING(t) :
-    r'\".*\"'
+    r'\"(\\"|[^"])*\"'
     t.value = str(t.value)
     return t
 
-any  =  r'|(\\n)' +\
+any  =  r'|(\\n)'+\
         r'|(\\a)'+\
         r'|(\\b)'+\
         r'|(\\f)'+\
@@ -163,19 +163,18 @@ any  =  r'|(\\n)' +\
         r'|(\\x)'+\
         r'|(\\u)'+\
         r'|(\\U)'+\
-        r'|(\')'+\
-        r'|(\")'+\
-        r'|(\?)'+\
-        r'|(\\)'+\
-        r'|(.)'
+        r'|(\')' +\
+        r'|(\")' +\
+        r'|(\?)' +\
+        r'|(\\)' +\
+        r'|(.)' 
 
 char_const = r'\'(' + any + r')+\''
 
 @TOKEN(char_const)
 def t_CHAR_CONST(t) :
-	# r'\'(.|\\n)\''
 	return t
 
 def t_error(t) :
-    # print('ERROR at (val, line, col) :: {} {} {}'.format(t.value, t.lineno, t.lexpos))
+    print('ERROR at (val, line, col) :: {} {} {}'.format(t.value[0], t.lineno, t.lexpos))
     t.lexer.skip(1)
