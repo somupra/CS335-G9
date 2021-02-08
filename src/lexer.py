@@ -11,7 +11,7 @@ def get_max_col_width(output):
         for str in op:
             width = max(width, len(str))
 
-    return width
+    return width+1
 
 if __name__ == '__main__':
     import ply.lex as lex
@@ -33,7 +33,7 @@ if __name__ == '__main__':
         output.append([str(tok.type), str(tok.value), str(tok.lineno), str(col)])
 
     max_col_width = get_max_col_width(output)
-    row_format = "{:<"+ str(max_col_width + 2) +"}" 
+    row_format = "{:<"+ str(max_col_width + 3) +"}" 
     row_format = row_format * (len(output[0])+1)
 
     print('-'*((max_col_width + 2)*4))

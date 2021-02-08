@@ -31,10 +31,11 @@ reserved = {
     'volatile': 'VOLATILE',
     'while': 'WHILE',
     'main': 'MAIN',
-    'include': 'INCLUDE'
+    'include': 'INCLUDE',
+    'char': 'CHAR'
 }
 
-tokens = ['NUMBER', 'STRING', 'VARIABLE', 'CHAR_CONST',
+tokens = ['NUMBER', 'STRING', 'CHAR_CONST',
           'ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE', 'EQUAL', 'ASSIGN', 'EXPONENT', 'MOD', 'XOR',
           'LSASSIGN', 'RSASSIGN', 'MULASSIGN', 'DIVASSIGN', 'PLUSASSIGN', 'MINUSASSIGN',
           'MODASSIGN', 'XORASSIGN', 'ORASSIGN', 'ANDASSIGN', 'ELLIPSIS', 'LSHIFT', 'RSHIFT',
@@ -109,22 +110,6 @@ digit            = r'([0-9])'
 nondigit         = r'([_A-Za-z])'
 identifier       = r'(' + nondigit + r'(' + digit + r'|' + nondigit + r')*)' 
 
-any  =  r'(\\n)'+\
-        r'|(\\a)'+\
-        r'|(\\b)'+\
-        r'|(\\f)'+\
-        r'|(\\r)'+\
-        r'|(\\t)'+\
-        r'|(\\v)'+\
-        r'|(\\x)'+\
-        r'|(\\u)'+\
-        r'|(\\U)'+\
-        r'|(\')' +\
-        r'|(\")' +\
-        r'|(\?)' +\
-        r'|(\\)' +\
-        r'|(.)' 
-
 any = r'(\\.|[^\\\'])+'
 
 char_const = r'L?\'(' + any + r')\''
@@ -141,12 +126,6 @@ def t_ID(t):
 def t_NEWLINE(t) :
 	r'\n'
 	t.lexer.lineno += 1
-	global current_linepos
-	current_linepos = t.lexer.lexpos
-
-def t_VARIABLE(t):
-    r'[a-zA-Z][a-zA-Z_0-9]*'
-    return t
 
 def t_COMMENT(t) :
 	r"\/\/.*|\/\*(.|\n)*\*\/"
@@ -158,15 +137,14 @@ exp         = r'[Ee][+-]?' + digit + r'+'
 fs          = r'(f|F|l|L)'
 ls          = r'(u|U|l|L)*'
 
-number  =   r'((' + digit + r')*\.(' + digit + r')+(' + exp + r')?(' + fs + r')?)'     +\
+number  =   r'(0[xX](' + hex + r')+\.p[+-]?(' + digit + r')+([LlfF])?)'                  +\
+            r'|(0[xX](' + hex + r')+(' + ls + r')?)'                                   +\
             r'|(' + digit + r'*\.(' + digit + r')*((' + exp + r')?' + fs + r'?))'      +\
             r'|(' + digit + r'+(' + exp + r')(' + fs + r')?)'                          +\
-            r'|(0[xX](' + hex + r')+(' + ls + r')?)'                                   +\
             r'|((0)*(' + digit + r')+(' + ls + r')?)'                                  +\
             r'|((' + digit + r')+(' + ls + r')?)'                                      +\
             r'|' + digit
 
-# number = r'(' + digit + r'*\.(' + digit + r')*((' + exp + r')?' + fs + r'?))'
 
 @TOKEN(number)
 def t_NUMBER(t) :
@@ -174,7 +152,6 @@ def t_NUMBER(t) :
 
 def t_STRING(t) :
     r'L?\"(\\.|[^\\\"])*\"'
-    # r'\"(\\"|[^"])*\"'
     t.value = str(t.value)
     return t
 

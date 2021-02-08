@@ -7,6 +7,7 @@ void main(){
     float e;
     double f;
     double g;
+    double h = 0x2adff234.p12F;
     a = 1234;
     b = 1e12;
     c = 0x234556ff;
