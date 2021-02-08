@@ -34,7 +34,9 @@ if __name__ == '__main__':
 
     max_col_width = get_max_col_width(output)
     row_format = "{:<"+ str(max_col_width + 3) +"}" 
-    row_format = row_format * (len(output[0])+1)
+    
+    if(output): row_format = row_format * (len(output[0])+1)
+    else: exit()
 
     print('-'*((max_col_width + 2)*4))
     header = ['TOKEN', 'LEXEME', 'ROW', 'COLUMN']

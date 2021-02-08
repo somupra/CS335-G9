@@ -1,1 +1,0 @@
-double a = 0x2adff234.p1L;

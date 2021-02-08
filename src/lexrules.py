@@ -103,20 +103,19 @@ t_CCP = r'\}'
 t_OSP = r'\['
 t_CSP = r'\]'
 
+def t_CHAR_CONST(t) :
+    r'[UuL]?\'([^\\\n]|(\\(.|\n)))*?\''
+    return t
+
+def t_STRING(t) :
+    r'[UuL]?\"([^\\\n]|(\\(.|\n)))*?\"'
+    return t
+
+digit               = r'([0-9])'
+nondigit            = r'([_A-Za-z])'
+identifier          = r'(' + nondigit + r'(' + digit + r'|' + nondigit + r')*)' 
 
 from ply.lex import TOKEN
-
-digit            = r'([0-9])'
-nondigit         = r'([_A-Za-z])'
-identifier       = r'(' + nondigit + r'(' + digit + r'|' + nondigit + r')*)' 
-
-any = r'(\\.|[^\\\'])+'
-
-char_const = r'L?\'(' + any + r')\''
-
-@TOKEN(char_const)
-def t_CHAR_CONST(t) :
-	return t
 
 @TOKEN(identifier)
 def t_ID(t):
@@ -137,7 +136,7 @@ exp         = r'[Ee][+-]?' + digit + r'+'
 fs          = r'(f|F|l|L)'
 ls          = r'(u|U|l|L)*'
 
-number  =   r'(0[xX](' + hex + r')+\.p[+-]?(' + digit + r')+([LlfF])?)'                  +\
+number  =   r'(0[xX](' + hex + r')+\.p[+-]?(' + digit + r')+([LlfF])?)'                +\
             r'|(0[xX](' + hex + r')+(' + ls + r')?)'                                   +\
             r'|(' + digit + r'*\.(' + digit + r')*((' + exp + r')?' + fs + r'?))'      +\
             r'|(' + digit + r'+(' + exp + r')(' + fs + r')?)'                          +\
@@ -148,11 +147,6 @@ number  =   r'(0[xX](' + hex + r')+\.p[+-]?(' + digit + r')+([LlfF])?)'         
 
 @TOKEN(number)
 def t_NUMBER(t) :
-    return t
-
-def t_STRING(t) :
-    r'L?\"(\\.|[^\\\"])*\"'
-    t.value = str(t.value)
     return t
 
 def t_error(t) :
