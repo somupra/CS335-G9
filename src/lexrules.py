@@ -109,6 +109,30 @@ digit            = r'([0-9])'
 nondigit         = r'([_A-Za-z])'
 identifier       = r'(' + nondigit + r'(' + digit + r'|' + nondigit + r')*)' 
 
+any  =  r'(\\n)'+\
+        r'|(\\a)'+\
+        r'|(\\b)'+\
+        r'|(\\f)'+\
+        r'|(\\r)'+\
+        r'|(\\t)'+\
+        r'|(\\v)'+\
+        r'|(\\x)'+\
+        r'|(\\u)'+\
+        r'|(\\U)'+\
+        r'|(\')' +\
+        r'|(\")' +\
+        r'|(\?)' +\
+        r'|(\\)' +\
+        r'|(.)' 
+
+any = r'(\\.|[^\\\'])+'
+
+char_const = r'L?\'(' + any + r')\''
+
+@TOKEN(char_const)
+def t_CHAR_CONST(t) :
+	return t
+
 @TOKEN(identifier)
 def t_ID(t):
     t.type = reserved.get(t.value, "ID")
@@ -149,32 +173,11 @@ def t_NUMBER(t) :
     return t
 
 def t_STRING(t) :
-    r'\"(\\"|[^"])*\"'
+    r'L?\"(\\.|[^\\\"])*\"'
+    # r'\"(\\"|[^"])*\"'
     t.value = str(t.value)
     return t
 
-any  =  r'(\\n)'+\
-        r'|(\\a)'+\
-        r'|(\\b)'+\
-        r'|(\\f)'+\
-        r'|(\\r)'+\
-        r'|(\\t)'+\
-        r'|(\\v)'+\
-        r'|(\\x)'+\
-        r'|(\\u)'+\
-        r'|(\\U)'+\
-        r'|(\')' +\
-        r'|(\")' +\
-        r'|(\?)' +\
-        r'|(\\)' +\
-        r'|(.)' 
-
-char_const = r'\'(' + any + r')+\''
-
-@TOKEN(char_const)
-def t_CHAR_CONST(t) :
-	return t
-
 def t_error(t) :
-    print('ERROR at (val, line, col) :: {} {} {}'.format(t.value[0], t.lineno, t.lexpos))
+    print('ERROR at (val, line, position from start) :: {} {} {}'.format(t.value[0], t.lineno, t.lexpos))
     t.lexer.skip(1)
