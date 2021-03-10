@@ -1,24 +1,7 @@
-// C-program for comments
-// this should be ignored
-/*
-.
-.
-.
-.
-.
-THIS should also be ignored
-.
-.
-.
-.
-*/
-int a; // ID a should be at row 14 col 5
-
-//
-//
-//
-//
-//
-//
-
-printf("bye"); // this should be at row 23
+int main(int argc){
+    int a = 1, b = 2;
+    if(a < b){
+        a++;
+    }
+    return 0;
+}
