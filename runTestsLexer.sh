@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
 test () {
-	printf "\n\nTEST $1 RESULTS \n"
-	python ./src/lexer.py tests/test$1.c 
+	printf "\n\nLEXER TEST $1 RESULTS \n"
+	python ./src/lexer.py tests/lexer/test$1.c 
 }
 
 # tests
-# test 1 
-# test 2
-# test 3
-# test 4
-# test 5
-# test 6
-# test 7
+test 1 
+test 2
+test 3
+test 4
+test 5
+test 6
+test 7
 test 8
 
 # cleanup pycache and out files

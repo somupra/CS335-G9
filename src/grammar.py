@@ -273,7 +273,7 @@ def p_declaration(p):
                 | declaration_specifiers init_declarator_list SEMICOLON
     '''
     if (len(p)==3):
-        p[0] = Node("declaration", p[1], p[2])
+        p[0] = Node("declaration", [p[1]], p[2])
     else:
         p[0] = Node("declaration", [p[1],p[2]], p[3])
 
@@ -350,7 +350,7 @@ def p_struct_or_union_specifier(p):
                               | struct_or_union ID
     '''
     if (len(p)==3):
-        p[0] = Node("struct_or_union_specifier", p[1], p[2])
+        p[0] = Node("struct_or_union_specifier", [p[1]], p[2])
     elif (len(p)==5):
         p[0] = Node("struct_or_union_specifier", [p[1],p[3]], None)
     else:
@@ -414,7 +414,7 @@ def p_struct_declarator(p):
     if (len(p)==2):
         p[0] = p[1]
     elif (len(p)==3):
-        p[0] = Node("struct_declarator", p[2], p[1])
+        p[0] = Node("struct_declarator", [p[2]], p[1])
     elif (len(p)==4):
         p[0] = Node("struct_declarator", [p[1],p[3]], p[2])
 
@@ -429,7 +429,7 @@ def p_enum_specifier(p):
     elif (len(p)==5):
         p[0] = p[3]
     else:
-        p[0] = Node("enum_specifier", p[4], [p[2]])
+        p[0] = Node("enum_specifier", [p[4]], [p[2]])
 
 
 def p_enumerator_list(p):
@@ -440,7 +440,7 @@ def p_enumerator_list(p):
     if (len(p)==4):
         p[0] = Node("enumerator_list", [p[1],p[3]], p[2])
     else:
-        p[0] = Node("enumerator_list", p[1], None)
+        p[0] = Node("enumerator_list", [p[1]], None)
 
 
 def p_enumerator(p):
@@ -451,7 +451,7 @@ def p_enumerator(p):
     if (len(p)==4):
         p[0] = Node("enumerator", [p[1],p[3]], p[2])
     else:
-        p[0] = Node("enumerator", p[1], None)
+        p[0] = Node("enumerator", [p[1]], None)
 
 
 def p_type_qualifier(p):
@@ -470,7 +470,7 @@ def p_declarator(p):
     if (len(p)==3):
         p[0] = Node("declarator", [p[1],p[2]], None)
     else:
-        p[0] = Node("declarator", p[1], None)
+        p[0] = Node("declarator", [p[1]], None)
 
         
 def p_direct_declarator(p):
@@ -504,7 +504,7 @@ def p_pointer(p):
     if (len(p)==2):
         p[0] = Node("pointer", None, p[1])
     elif (len(p)==3):
-        p[0] = Node("pointer", p[2], p[1])
+        p[0] = Node("pointer", [p[2]], p[1])
     else:
         p[0] = Node("pointer", [p[2],p[3]], p[1])
 

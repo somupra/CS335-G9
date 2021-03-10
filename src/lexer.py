@@ -14,6 +14,17 @@ def get_max_col_width(output):
 
     return width+1
 
+def bfs(node):
+    if node:
+        if isinstance(node, str):
+            print(node)
+            return
+
+        print(node.leaf)
+        for c in node.children:
+            bfs(c)
+    return
+
 if __name__ == '__main__':
     import ply.lex as lex
     lexer = lex.lex(module=lexrules)
@@ -25,7 +36,7 @@ if __name__ == '__main__':
 
     obj = parser.parse(input=input, lexer=lexer)
     print(obj)
-    
+    bfs(obj)
     exit()
 
     lexer.input(input)
