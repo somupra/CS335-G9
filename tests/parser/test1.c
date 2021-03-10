@@ -1,18 +1,10 @@
-void main(){
-    // C - program for NUMBER key word
-    int a;
-    long b;
-    long long c;
-    unsigned int d;
-    float e;
-    double f;
-    double g;
-    double h = 0x2adff234.p12F;
-    a = 1234;
-    b = 1e12;
-    c = 0x234556ff;
-    d = 0001235;
-    e = 12.09;
-    f = 0.e-123;
-    g = 2.;
+int main(){
+    int a = 5 ;
+    int b = a*10 ;
+    int d = b-7 ;
+    int e = a+b+c+d ;
+    float f = a+b/10 ;
+    double k = 10.25748*10.490904503 ;
+    long l = 100000000*1000000000 ;
+    return 0;
 }
