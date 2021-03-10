@@ -2,6 +2,16 @@ import lexrules
 import ply.lex as lex
 from grammar import parser
 
+def bfs(node):
+    if node == None:
+        return
+    print(node.type)
+    if node.leaf:
+        print(node.leaf)
+
+    for c in node.children:
+        bfs(c)
+    
 def find_column(input, token):
     line_start = input.rfind('\n', 0, token.lexpos) + 1
     return (token.lexpos - line_start) + 1
@@ -24,7 +34,7 @@ if __name__ == '__main__':
         input = f.read()
 
     obj = parser.parse(input=input, lexer=lexer)
-    print(obj)
+    
     
     exit()
 

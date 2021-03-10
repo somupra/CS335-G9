@@ -20,6 +20,7 @@ def p_primary_expression(p):
                         | NUMBER
 	                    | OP expression CP
     '''
+    
     p[0] = Node('asdf', [p[1]])
     
 def p_postfix_expression(p):
@@ -33,6 +34,7 @@ def p_postfix_expression(p):
                         | postfix_expression INCREMENT
                         | postfix_expression DECREMENT
     '''
+    
     p[0] = Node('asdf', [p[1]])
 
 def p_argument_expression_list(p):
@@ -451,7 +453,7 @@ def p_statement(p):
               | iteration_statement
               | jump_statement
     '''
-    p[0] = Node('asdf', [p[1]])
+    p[0] = p[1]
 
 def p_labeled_statement(p):
     '''
@@ -459,7 +461,15 @@ def p_labeled_statement(p):
                       | CASE constant_expression COLON statement
                       | DEFAULT COLON statement
     '''
-    p[0] = Node('asdf', [p[1]])
+    if len(p) == 4:
+        if p[1] == 'default':
+            p[0] = Node('labeled-stmt-default', [p[3]])
+        else:
+            p[0] = Node('labeled-stmt-normal', [p[1], p[3]])
+
+    elif len(p) == 5:
+        p[0] = Node('labeled-stmt-case', [p[2], p[4]])
+
 
 def p_compound_statement(p):
     '''
@@ -468,28 +478,39 @@ def p_compound_statement(p):
                        | OCP declaration_list CCP
                        | OCP declaration_list statement_list CCP
     '''
-    p[0] = Node('asdf', [p[1]])
+    if len(p) == 4:
+        p[0] = p[2]
+    elif len(p) == 5:
+        p[0] = Node('comp-stmt', [p[2], p[3]])
 
 def p_declaration_list(p):
     '''
     declaration_list : declaration
                      | declaration_list declaration
     '''
-    p[0] = Node('asdf', [p[1]])
+    if len(p) == 2:
+        p[0] = Node('decl', [p[1]])
+    else:
+        p[0] = Node('decl-list', [p[1], p[2]])
 
 def p_statement_list(p):
     '''
     statement_list : statement
                    | statement_list statement
     '''
-    p[0] = Node('asdf', [p[1]])
+    if len(p) == 2:
+        p[0] = Node('stmt', [p[1]])
+    else:
+        p[0] = Node('stmt-list', [p[1], p[2]])
 
 def p_expression_statement(p):
     '''
     expression_statement : SEMICOLON
                          | expression SEMICOLON
     '''
-    p[0] = Node('asdf', [p[1]])
+    if len(p) == 3:
+        p[0] = Node('expr-stmt', [p[1]], None)
+
 
 def p_selection_statement(p):
     '''
@@ -497,17 +518,29 @@ def p_selection_statement(p):
                         | IF OP expression CP statement ELSE statement
                         | SWITCH OP expression CP statement
     '''
-    if(len(p) == 6): p[0] = Node('if-then', [p[3], p[5]], None)
-    elif(len(p) == 8): p[0] = Node('if-then-else', [p[3], p[5], p[7]], None)
+    if len(p) == 6: 
+        if p[1] == 'IF' : p[0] = Node('if-then', [p[3], p[5]], None)
+        else: p[0] = Node('switch', [p[3], p[5]], None)
+
+    elif len(p) == 8: p[0] = Node('if-then-else', [p[3], p[5], p[7]], None)
 	
 def p_iteration_statement(p):
     '''
-    iteration_statement : WHILE OP expression CP statement
+    iteration_statement : WHILE OP expression CP statement 
                         | DO statement WHILE OP expression CP SEMICOLON
                         | FOR OP expression_statement expression_statement CP statement
                         | FOR OP expression_statement expression_statement expression CP statement
     '''
-    p[0] = Node('asdf', [p[1]])
+    if len(p) == 6:
+        p[0] = Node('while', [p[3], p[5]], None)
+
+    elif len(p) == 8:
+        if p[1].leaf == 'FOR': p[0] = Node('for-with-update', [p[3], p[4], p[5]], None)
+        else: p[0] = Node('do-while', [p[2], p[5]], None)
+
+    elif len(p) == 7:
+        p[0] = Node('for-no-update', [p[3], p[4]], None)
+
 
 def p_jump_statement(p):
     '''
@@ -517,21 +550,30 @@ def p_jump_statement(p):
                    | RETURN SEMICOLON
                    | RETURN expression SEMICOLON
     '''
-    p[0] = Node('asdf', [p[1]])
+    if len(p) == 4:
+        if p[1] == 'goto': p[0] = Node('goto', None, p[2])
+        else: p[0] = Node('return', [p[2]], None);
+    else:
+        if p[1] == 'continue': p[0] = Node('continue', None, None)
+        if p[1] == 'break': p[0] = Node('break', None, None)
+        if p[1] == 'return': p[0] = Node('return', None, None)
+
 
 def p_translation_unit(p):
     '''
     translation_unit : external_declaration
                      | translation_unit external_declaration
     '''
-    p[0] = Node('asdf', [p[1]])
+
+    if len(p) == 2: p[0] = Node('start', [p[1]], None)
+    else: p[0]= Node('start1', [p[1], p[2]], None)
 
 def p_external_declaration(p):
     '''
     external_declaration : function_definition
                          | declaration
     '''
-    p[0] = Node('asdf', [p[1]])
+    p[0] = Node('ext_declaration', [p[1]])
 
 def p_function_definition(p):
     '''
@@ -540,7 +582,13 @@ def p_function_definition(p):
                         | declarator declaration_list compound_statement
                         | declarator compound_statement
     '''
-    p[0] = Node('asdf', [p[1]])
+    if len(p) == 5:
+        p[0] = Node('fd', [p[2], p[3], p[4]], None)
+    elif len(p) == 4:
+        if p[1].type == 'declarator': p[0] = Node('fd', [p[1], p[2], p[3]], None)
+        else: p[0] = Node('fd', [p[2], p[3]], None)
+    elif len(p) == 3:
+        p[0] = Node('fd', [p[1], p[2]], None)
 
 def p_error(p):
     print("error for ", p)
