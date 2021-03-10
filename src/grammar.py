@@ -12,7 +12,6 @@ class Node:
         self.leaf = leaf
 
 start = 'translation_unit'
-
 def p_primary_expression(p):
 	'''
 	primary_expression : ID
@@ -21,7 +20,7 @@ def p_primary_expression(p):
 						| OP expression CP
 	'''
 	if p[1]=='(':
-	  p[0] = Node("primary_expression", [p[2]], None)
+	  p[0] = p[2]
 	else:
 	  p[0] = Node("primary_expression", None, p[1])
 	
@@ -36,30 +35,30 @@ def p_postfix_expression(p):
 						| postfix_expression INCREMENT
 						| postfix_expression DECREMENT
 	'''
-	if p[2]=='[':
-		p[0] = Node("postfix_expression", [p[1],p[3]], None)
+	if len(p)==2:#1
+		p[0] = p[1]
+	elif p[2]=='[':
+		p[0] = Node("postfix_expression", [p[1],p[3]], None)#2
 	elif p[2]=='++':
-		p[0] = Node("postfix_expression", [p[1]], p[2])
+		p[0] = Node("postfix_expression", [p[1]], p[2])#7
 	elif p[2]=='--':
-		p[0] = Node("postfix_expression", [p[1]], p[2])
+		p[0] = Node("postfix_expression", [p[1]], p[2])#8
 	elif p[2]=='.':
-		p[0] = Node("postfix_dot_exp", [p[1]], p[3])
+		p[0] = Node("postfix_dot_exp", [p[1]], p[3])#5
 	elif p[2]=='->':
-		p[0] = Node("postfix_arrow_exp", [p[1]], p[3])
-	elif p[3]==')':
-		p[0] = Node("postfix_expression", [p[1]], None)
-	elif p[2]=='(':
+		p[0] = Node("postfix_arrow_exp", [p[1]], p[3])#6
+	elif p[3]==')':#3
+		p[0] = p[1]
+	elif p[2]=='(':#4
 		p[0] = Node("postfix_expression", [p[1],p[3]], None)
-	else:
-		p[0] = Node("postfix_expression", [p[1]], None)
 
 def p_argument_expression_list(p):
 	'''
 	argument_expression_list : assignment_expression
 							| argument_expression_list COMMA assignment_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("argument_expression_list", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("primary_expression", [p[1],p[3]], p[2])
 
@@ -72,8 +71,8 @@ def p_unary_expression(p):
 						| SIZEOF unary_expression
 						| SIZEOF OP type_name CP
 	'''
-	if len(p)==1:
-		p[0] = Node("unary_expression", [p[1]], None)#1
+	if len(p)==2:
+		p[0] = p[1]
 	elif p[1]=='++':
 		p[0] = Node("unary_expression", [p[2]], p[1])#2
 	elif p[1]=='--':
@@ -101,7 +100,10 @@ def p_cast_expression(p):
 	cast_expression : unary_expression
 					| OP type_name CP cast_expression
 	'''
-	p[0] = Node("cast_expression", [p[-1]], None)
+	if len(p)==2:
+		p[0] = p[1]
+	else:
+		p[0] = p[4]
 
 def p_multiplicative_expression(p):
 	'''
@@ -110,8 +112,8 @@ def p_multiplicative_expression(p):
 							| multiplicative_expression DIVIDE cast_expression
 							| multiplicative_expression MOD cast_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("unary_expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("unary_expression", [p[1],p[3]], p[2])
 
@@ -121,8 +123,8 @@ def p_additive_expression(p):
 						| additive_expression ADD multiplicative_expression
 						| additive_expression SUBTRACT multiplicative_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("additive_expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("additive_expression", [p[1],p[3]], p[2])
 
@@ -132,8 +134,8 @@ def p_shift_expression(p):
 					| shift_expression LSHIFT additive_expression
 					| shift_expression RSHIFT additive_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("shift_expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("shift_expression", [p[1],p[3]], p[2])
 
@@ -145,8 +147,8 @@ def p_relational_expression(p):
 							| relational_expression LEQ shift_expression
 							| relational_expression GEQ shift_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("relational_expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("relational_expression", [p[1],p[3]], p[2])
 
@@ -156,8 +158,8 @@ def p_equality_expression(p):
 						| equality_expression EQUAL relational_expression
 						| equality_expression NEQ relational_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("equality_expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("equality_expression", [p[1],p[3]], p[2])
 
@@ -166,8 +168,8 @@ def p_and_expression(p):
 	and_expression : equality_expression
 					| and_expression B_AND equality_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("and_expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("and_expression", [p[1],p[3]], p[2])
 	
@@ -176,8 +178,8 @@ def p_exclusive_or_expression(p):
 	exclusive_or_expression : and_expression
 							| exclusive_or_expression XOR and_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("exclusive_or_expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("exclusive_or_expression", [p[1],p[3]], p[2])
 
@@ -186,8 +188,8 @@ def p_inclusive_or_expression(p):
 	inclusive_or_expression : exclusive_or_expression
 							| inclusive_or_expression B_OR exclusive_or_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("inclusive_or_expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("inclusive_or_expression", [p[1],p[3]], p[2])
 
@@ -196,8 +198,8 @@ def p_logical_and_expression(p):
 	logical_and_expression : inclusive_or_expression
 						   | logical_and_expression AND inclusive_or_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("logical_and_expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("logical_and_expression", [p[1],p[3]], p[2])
 
@@ -206,8 +208,8 @@ def p_logical_or_expression(p):
 	logical_or_expression : logical_and_expression
 						  | logical_or_expression OR logical_and_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("logical_or_expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("logical_or_expression", [p[1],p[3]], p[2])
 
@@ -216,8 +218,8 @@ def p_conditional_expression(p):
 	conditional_expression : logical_or_expression
 						   | logical_or_expression TERNARYOP expression COLON conditional_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("conditional_expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("conditional_expression", [p[1],p[3],p[5]], None) #??
 
@@ -226,8 +228,8 @@ def p_assignment_expression(p):
 	assignment_expression : conditional_expression
 						  | unary_expression assignment_operator assignment_expression    
 	'''
-	if len(p)==1:
-		p[0] = Node("assignment_expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("assignment_expression", [p[1],p[2],p[3]], None)
 
@@ -253,8 +255,8 @@ def p_expression(p):
 	expression : assignment_expression
 			   | expression COMMA assignment_expression
 	'''
-	if len(p)==1:
-		p[0] = Node("expression", [p[1]], None)
+	if len(p)==2:
+		p[0] = p[1]
 	else:
 		p[0] = Node("expression", [p[1],p[3]], p[2])
 
@@ -263,7 +265,7 @@ def p_constant_expression(p):
 	'''
 	constant_expression : conditional_expression
 	'''
-	p[0] = Node("constant_expression", [p[1]], None)
+	p[0] = p[1]
 
 def p_declaration(p):
     '''
