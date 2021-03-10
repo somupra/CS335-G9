@@ -719,7 +719,7 @@ def p_iteration_statement(p):
         p[0] = Node('while', [p[3], p[5]], None)
 
     elif len(p) == 8:
-        if p[1].leaf == 'FOR': p[0] = Node('for-with-update', [p[3], p[4], p[5]], None)
+        if p[1] == 'for': p[0] = Node('for-with-update', [p[3], p[4], p[5]], None)
         else: p[0] = Node('do-while', [p[2], p[5]], None)
 
     elif len(p) == 7:
