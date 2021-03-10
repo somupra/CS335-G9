@@ -1,7 +1,14 @@
-// This is for strings
-char str1[] = "this is a string";
-char str2[] = "string with @!#$^&*()\% symbols";
-char str3[] = "\n\b\t\v";
-int str4[] = L"asfsfd";
-char str5[] = "";
-char c = u'c';
+int main(){
+	int y = -1,x=10;
+	if(y<0)
+		y=y-1;
+	if(y==1)
+	{
+		x=x+2;
+	}
+	else
+	{
+		x=x-2;
+	}
+    return 0;
+}
