@@ -1,4 +1,4 @@
-
+import sys
 
 def p_primary_expression(p):
     '''
@@ -463,3 +463,6 @@ def p_function_definition(p):
                         | declarator compound_statement
     '''
 
+def p_error(p):
+    print "Syntax Error"
+    sys.exit()
