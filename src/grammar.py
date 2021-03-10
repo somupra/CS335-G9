@@ -267,7 +267,6 @@ def p_type_specifier(p):
                    | UNSIGNED
                    | struct_or_union_specifier
                    | enum_specifier
-                   | TYPE_NAME
     '''
     p[0] = Node("type_specifier", None, None)
 
