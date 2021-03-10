@@ -14,186 +14,256 @@ class Node:
 start = 'translation_unit'
 
 def p_primary_expression(p):
-    '''
-    primary_expression : ID
-	                    | CHAR_CONST
-                        | NUMBER
-	                    | OP expression CP
-    '''
-    p[0] = Node('asdf', [p[1]])
-    
+	'''
+	primary_expression : ID
+						| CHAR_CONST
+						| NUMBER
+						| OP expression CP
+	'''
+	if p[1]=='(':
+	  p[0] = Node("primary_expression", [p[2]], None)
+	else:
+	  p[0] = Node("primary_expression", None, p[1])
+	
 def p_postfix_expression(p):
-    '''
-    postfix_expression : primary_expression
-	                    | postfix_expression OSP expression CSP
-                        | postfix_expression OP CP
-                        | postfix_expression OP argument_expression_list CP
-                        | postfix_expression DOT ID
-                        | postfix_expression ARROW ID
-                        | postfix_expression INCREMENT
-                        | postfix_expression DECREMENT
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	postfix_expression : primary_expression
+						| postfix_expression OSP expression CSP
+						| postfix_expression OP CP
+						| postfix_expression OP argument_expression_list CP
+						| postfix_expression DOT ID
+						| postfix_expression ARROW ID
+						| postfix_expression INCREMENT
+						| postfix_expression DECREMENT
+	'''
+	if p[2]=='[':
+		p[0] = Node("postfix_expression", [p[1],p[3]], None)
+	elif p[2]=='++':
+		p[0] = Node("postfix_expression", [p[1]], p[2])
+	elif p[2]=='--':
+		p[0] = Node("postfix_expression", [p[1]], p[2])
+	elif p[2]=='.':
+		p[0] = Node("postfix_dot_exp", [p[1]], p[3])
+	elif p[2]=='->':
+		p[0] = Node("postfix_arrow_exp", [p[1]], p[3])
+	elif p[3]==')':
+		p[0] = Node("postfix_expression", [p[1]], None)
+	elif p[2]=='(':
+		p[0] = Node("postfix_expression", [p[1],p[3]], None)
+	else:
+		p[0] = Node("postfix_expression", [p[1]], None)
 
 def p_argument_expression_list(p):
-    '''
-    argument_expression_list : assignment_expression
-                            | argument_expression_list COMMA assignment_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	argument_expression_list : assignment_expression
+							| argument_expression_list COMMA assignment_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("argument_expression_list", [p[1]], None)
+	else:
+		p[0] = Node("primary_expression", [p[1],p[3]], p[2])
 
 def p_unary_expression(p):
-    '''
-    unary_expression : postfix_expression
-                        | INCREMENT unary_expression
-                        | DECREMENT unary_expression
-                        | unary_operator cast_expression
-                        | SIZEOF unary_expression
-                        | SIZEOF OP type_name CP
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	unary_expression : postfix_expression
+						| INCREMENT unary_expression
+						| DECREMENT unary_expression
+						| unary_operator cast_expression
+						| SIZEOF unary_expression
+						| SIZEOF OP type_name CP
+	'''
+	if len(p)==1:
+		p[0] = Node("unary_expression", [p[1]], None)#1
+	elif p[1]=='++':
+		p[0] = Node("unary_expression", [p[2]], p[1])#2
+	elif p[1]=='--':
+		p[0] = Node("unary_expression", [p[2]], p[1])#3
+	elif p[2]=='(':
+		p[0] = Node("unary_expression", [p[3]], p[1])#6 #??
+	elif p[1]=='sizeof':
+		p[0] = Node("unary_expression", [p[2]], p[1])#5
+	else:
+		p[0] = Node("unary_expression", [p[1],p[2]], None)#4
 
 def p_unary_operator(p):
-    '''
-    unary_operator : B_AND
-                | MULTIPLY
-                    | ADD
-                    | SUBTRACT
-                    | B_NOT
-                    | NOT
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	unary_operator : B_AND
+				| MULTIPLY
+					| ADD
+					| SUBTRACT
+					| B_NOT
+					| NOT
+	'''
+	p[0] = Node("unary_operator", None, p[1])
 
 def p_cast_expression(p):
-    '''
-    cast_expression : unary_expression
-                    | OP type_name CP cast_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	cast_expression : unary_expression
+					| OP type_name CP cast_expression
+	'''
+	p[0] = Node("cast_expression", [p[-1]], None)
 
 def p_multiplicative_expression(p):
-    '''
-    multiplicative_expression : cast_expression
-                            | multiplicative_expression MULTIPLY cast_expression
-                            | multiplicative_expression DIVIDE cast_expression
-                            | multiplicative_expression MOD cast_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	multiplicative_expression : cast_expression
+							| multiplicative_expression MULTIPLY cast_expression
+							| multiplicative_expression DIVIDE cast_expression
+							| multiplicative_expression MOD cast_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("unary_expression", [p[1]], None)
+	else:
+		p[0] = Node("unary_expression", [p[1],p[3]], p[2])
 
 def p_additive_expression(p):
-    '''
-    additive_expression : multiplicative_expression 
-                        | additive_expression ADD multiplicative_expression
-                        | additive_expression SUBTRACT multiplicative_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	additive_expression : multiplicative_expression 
+						| additive_expression ADD multiplicative_expression
+						| additive_expression SUBTRACT multiplicative_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("additive_expression", [p[1]], None)
+	else:
+		p[0] = Node("additive_expression", [p[1],p[3]], p[2])
 
 def p_shift_expression(p):
-    '''
-    shift_expression : additive_expression
-                    | shift_expression LSHIFT additive_expression
-                    | shift_expression RSHIFT additive_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	shift_expression : additive_expression
+					| shift_expression LSHIFT additive_expression
+					| shift_expression RSHIFT additive_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("shift_expression", [p[1]], None)
+	else:
+		p[0] = Node("shift_expression", [p[1],p[3]], p[2])
 
 def p_relational_expression(p):
-    '''
-    relational_expression : shift_expression
-                            | relational_expression LT shift_expression
-                            | relational_expression GT shift_expression
-                            | relational_expression LEQ shift_expression
-                            | relational_expression GEQ shift_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	relational_expression : shift_expression
+							| relational_expression LT shift_expression
+							| relational_expression GT shift_expression
+							| relational_expression LEQ shift_expression
+							| relational_expression GEQ shift_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("relational_expression", [p[1]], None)
+	else:
+		p[0] = Node("relational_expression", [p[1],p[3]], p[2])
 
 def p_equality_expression(p):
-    '''
-    equality_expression : relational_expression
-                        | equality_expression EQUAL relational_expression
-                        | equality_expression NEQ relational_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	equality_expression : relational_expression
+						| equality_expression EQUAL relational_expression
+						| equality_expression NEQ relational_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("equality_expression", [p[1]], None)
+	else:
+		p[0] = Node("equality_expression", [p[1],p[3]], p[2])
 
 def p_and_expression(p):
-    '''
-    and_expression : equality_expression
-                    | and_expression B_AND equality_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
-    
+	'''
+	and_expression : equality_expression
+					| and_expression B_AND equality_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("and_expression", [p[1]], None)
+	else:
+		p[0] = Node("and_expression", [p[1],p[3]], p[2])
+	
 def p_exclusive_or_expression(p):
-    '''
-    exclusive_or_expression : and_expression
-                            | exclusive_or_expression XOR and_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	exclusive_or_expression : and_expression
+							| exclusive_or_expression XOR and_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("exclusive_or_expression", [p[1]], None)
+	else:
+		p[0] = Node("exclusive_or_expression", [p[1],p[3]], p[2])
 
 def p_inclusive_or_expression(p):
-    '''
-    inclusive_or_expression : exclusive_or_expression
-                            | inclusive_or_expression B_OR exclusive_or_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	inclusive_or_expression : exclusive_or_expression
+							| inclusive_or_expression B_OR exclusive_or_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("inclusive_or_expression", [p[1]], None)
+	else:
+		p[0] = Node("inclusive_or_expression", [p[1],p[3]], p[2])
 
 def p_logical_and_expression(p):
-    '''
-    logical_and_expression : inclusive_or_expression
-                           | logical_and_expression AND inclusive_or_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	logical_and_expression : inclusive_or_expression
+						   | logical_and_expression AND inclusive_or_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("logical_and_expression", [p[1]], None)
+	else:
+		p[0] = Node("logical_and_expression", [p[1],p[3]], p[2])
 
 def p_logical_or_expression(p):
-    '''
-    logical_or_expression : logical_and_expression
-                          | logical_or_expression OR logical_and_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	logical_or_expression : logical_and_expression
+						  | logical_or_expression OR logical_and_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("logical_or_expression", [p[1]], None)
+	else:
+		p[0] = Node("logical_or_expression", [p[1],p[3]], p[2])
 
 def p_conditional_expression(p):
-    '''
-    conditional_expression : logical_or_expression
-                           | logical_or_expression TERNARYOP expression COLON conditional_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	conditional_expression : logical_or_expression
+						   | logical_or_expression TERNARYOP expression COLON conditional_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("conditional_expression", [p[1]], None)
+	else:
+		p[0] = Node("conditional_expression", [p[1],p[3],p[5]], None) #??
 
 def p_assignment_expression(p):
-    '''
-    assignment_expression : conditional_expression
-                          | unary_expression assignment_operator assignment_expression    
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	assignment_expression : conditional_expression
+						  | unary_expression assignment_operator assignment_expression    
+	'''
+	if len(p)==1:
+		p[0] = Node("assignment_expression", [p[1]], None)
+	else:
+		p[0] = Node("assignment_expression", [p[1],p[2],p[3]], None)
 
 def p_assignment_operator(p):
-    '''
-    assignment_operator : ASSIGN
-                        | MULASSIGN
-                        | DIVASSIGN
-                        | MODASSIGN
-                        | PLUSASSIGN
-                        | MINUSASSIGN
-                        | LSASSIGN
-                        | RSASSIGN
-                        | ANDASSIGN
-                        | XORASSIGN
-                        | ORASSIGN
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	assignment_operator : ASSIGN
+						| MULASSIGN
+						| DIVASSIGN
+						| MODASSIGN
+						| PLUSASSIGN
+						| MINUSASSIGN
+						| LSASSIGN
+						| RSASSIGN
+						| ANDASSIGN
+						| XORASSIGN
+						| ORASSIGN
+	'''
+	p[0] = Node("assignment_operator", None, p[1])
 
 
 def p_expression(p):
-    '''
-    expression : assignment_expression
-               | expression COMMA assignment_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	expression : assignment_expression
+			   | expression COMMA assignment_expression
+	'''
+	if len(p)==1:
+		p[0] = Node("expression", [p[1]], None)
+	else:
+		p[0] = Node("expression", [p[1],p[3]], p[2])
 
 
 def p_constant_expression(p):
-    '''
-    constant_expression : conditional_expression
-    '''
-    p[0] = Node('asdf', [p[1]])
-
+	'''
+	constant_expression : conditional_expression
+	'''
+	p[0] = Node("constant_expression", [p[1]], None)
 
 def p_declaration(p):
     '''
