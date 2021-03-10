@@ -273,9 +273,9 @@ def p_declaration(p):
                 | declaration_specifiers init_declarator_list SEMICOLON
     '''
     if (len(p)==3):
-        p[0] = Node("declaration", [p[1]], p[2])
+        p[0] = p[1]
     else:
-        p[0] = Node("declaration", [p[1],p[2]], p[3])
+        p[0] = Node("declaration", [p[1],p[2]], None)
 
 
 def p_declaration_specifiers(p):
@@ -299,7 +299,7 @@ def p_init_declarator_list(p):
                          | init_declarator_list COMMA init_declarator
     '''
     if (len(p)==4):
-        p[0] = Node("init_declarator_list", [p[1],p[3]], p[2])
+        p[0] = Node("init_declarator_list", [p[1],p[3]], None)
     else:
         p[0] = p[1]
         
@@ -323,7 +323,7 @@ def p_storage_class_specifier(p):
                             | AUTO
                             | REGISTER
     '''
-    p[0] = Node("storage_class_specifier", None, None)
+    p[0] = None
 
     
 def p_type_specifier(p):
@@ -341,7 +341,7 @@ def p_type_specifier(p):
                    | enum_specifier
                    | TYPE_NAME
     '''
-    p[0] = Node("type_specifier", None, None)
+    p[0] = None
 
 def p_struct_or_union_specifier(p):
     '''
@@ -362,7 +362,7 @@ def p_struct_or_union(p):
     struct_or_union : STRUCT
                     | UNION
     '''
-    p[0] = Node("struct_or_union", None, None)
+    p[0] = None
 
 def p_struct_declaration_list(p):
     '''
@@ -379,7 +379,7 @@ def p_struct_declaration(p):
     '''
     struct_declaration : specifier_qualifier_list struct_declarator_list SEMICOLON
     '''
-    p[0] = Node("struct_declaration", [p[1],p[2]], p[3])
+    p[0] = Node("struct_declaration", [p[1],p[2]], None)
 
 
 def p_specifier_qualifier_list(p):
@@ -400,7 +400,7 @@ def p_struct_declarator_list(p):
                            | struct_declarator_list COMMA struct_declarator
     '''
     if (len(p)==4):
-        p[0] = Node("struct_declarator_list", [p[1],p[3]], p[2])
+        p[0] = Node("struct_declarator_list", [p[1],p[3]], None)
     else:
         p[0] = p[1]
 
@@ -438,7 +438,7 @@ def p_enumerator_list(p):
                     | enumerator_list COMMA enumerator
     '''
     if (len(p)==4):
-        p[0] = Node("enumerator_list", [p[1],p[3]], p[2])
+        p[0] = Node("enumerator_list", [p[1],p[3]], None)
     else:
         p[0] = Node("enumerator_list", [p[1]], None)
 
@@ -459,7 +459,7 @@ def p_type_qualifier(p):
     type_qualifier : CONST
                    | VOLATILE
     '''
-    p[0] = Node("type_qualifier", None, None)
+    p[0] = None
     
 	
 def p_declarator(p):
@@ -515,21 +515,30 @@ def p_type_qualifier_list(p):
     type_qualifier_list : type_qualifier
                         | type_qualifier_list type_qualifier
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==3):
+        p[0] = Node("type_qualifier_list", [p[1],p[2]], None)
+    else:
+        p[0] = p[1]
 
 def p_parameter_type_list(p):
     '''
     parameter_type_list : parameter_list
                         | parameter_list COMMA ELLIPSIS
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==4):
+        p[0] = Node("parameter_type_list", p[1], [p[2], p[3]])
+    else:
+        p[0] = p[1]
 
 def p_parameter_list(p):
     '''
     parameter_list : parameter_declaration
                    | parameter_list COMMA parameter_declaration
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==4):
+        p[0] = Node("parameter_list", [p[1], p[3]], p[2])
+    else:
+        p[0] = p[1]
 
 def p_parameter_declaration(p):
     '''
@@ -537,21 +546,30 @@ def p_parameter_declaration(p):
                           | declaration_specifiers abstract_declarator
                           | declaration_specifiers
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==3):
+        p[0] = Node("parameter_declaration", [p[1], p[2]], None)
+    else:
+        p[0] = p[1]
 
 def p_identifier_list(p):
     '''
     identifier_list : ID
                     | identifier_list COMMA ID
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==4):
+        p[0] = Node("identifier_list", p[1], [p[2], p[3]])
+    else:
+        p[0] = Node("identifier_list", None, p[1])
 
 def p_type_name(p):
     '''
     type_name : specifier_qualifier_list
               | specifier_qualifier_list abstract_declarator
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==3):
+        p[0] = Node("type_name", [p[1],p[2]], None)
+    else:
+        p[0] = p[1]
 
 def p_abstract_declarator(p):
     '''
@@ -559,7 +577,10 @@ def p_abstract_declarator(p):
                         | direct_abstract_declarator
                         | pointer direct_abstract_declarator
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==3):
+        p[0] = Node("type_name", [p[1],p[2]], None)
+    else:
+        p[0] = p[1]
 
 def p_direct_abstract_declarator(p):
     '''
@@ -573,7 +594,14 @@ def p_direct_abstract_declarator(p):
                                | direct_abstract_declarator OP CP
                                | direct_abstract_declarator OP parameter_type_list CP
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==3):
+        p[0] = None
+    elif (len(p)==5):
+        p[0] = Node("type_name", [p[1],p[3]], None)
+    elif (p[1]=='(' or p[1]=='['):
+    	p[0] = p[2]
+    else:
+    	p[0] = p[1]
 
 def p_initializer(p):
 	'''
@@ -737,13 +765,12 @@ def p_function_definition(p):
                         | declarator declaration_list compound_statement
                         | declarator compound_statement
     '''
-    if len(p) == 5:
-        p[0] = Node('fd', [p[2], p[3], p[4]], None)
-    elif len(p) == 4:
-        if p[1].type == 'declarator': p[0] = Node('fd', [p[1], p[2], p[3]], None)
-        else: p[0] = Node('fd', [p[2], p[3]], None)
-    elif len(p) == 3:
-        p[0] = Node('fd', [p[1], p[2]], None)
+    if len(p)==3:
+	p[0] = Node('declaration_list',[p[1],p[2]],None)
+    elif len(p)==4:
+	p[0] = Node('declaration_list',[p[1],p[2],p[3]],None)
+    elif len(p)==5:
+	p[0] = Node('declaration_list',[p[1],p[2],p[3],p[4]],None)
 
 def p_error(p):
     print("error for ", p)
