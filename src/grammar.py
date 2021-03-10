@@ -631,6 +631,8 @@ def p_compound_statement(p):
 		p[0] = p[2]
 	elif len(p)==5:
 		p[0] = Node('labeled_statement',[p[2],p[3]],None)# 1st rule ??
+	else:
+		p[0]=None		
 
 
 def p_declaration_list(p):
