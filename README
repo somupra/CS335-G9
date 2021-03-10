@@ -2,5 +2,5 @@ Firstly, install the required packages in your python virtual environment: pip i
 
 To run the testcases:
 
-./runTests.sh
+bash runTestsParser.sh
 
