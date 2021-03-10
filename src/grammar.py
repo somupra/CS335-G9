@@ -270,7 +270,7 @@ def p_declaration(p):
     declaration : declaration_specifiers SEMICOLON
                 | declaration_specifiers init_declarator_list SEMICOLON
     '''
-    if p[3]==None:
+    if (len(p)==3):
         p[0] = Node("declaration", p[1], p[2])
     else:
         p[0] = Node("declaration", [p[1],p[2]], p[3])
@@ -285,7 +285,7 @@ def p_declaration_specifiers(p):
                            | type_qualifier
                            | type_qualifier declaration_specifiers
     '''
-    if p[2]==None:
+    if (len(p)==2):
         p[0] = Node("declaration_specifiers", p[1], None)
     else:
         p[0] = Node("declaration_specifiers", [p[1],p[2]], None)
@@ -296,7 +296,7 @@ def p_init_declarator_list(p):
     init_declarator_list : init_declarator
                          | init_declarator_list COMMA init_declarator
     '''
-    if p[2]==',':
+    if (len(p)==4):
         p[0] = Node("init_declarator_list", [p[1],p[3]], p[2])
     else:
         p[0] = Node("init_declarator_list", p[1], None)
@@ -307,7 +307,7 @@ def p_init_declarator(p):
     init_declarator : declarator
                     | declarator ASSIGN initializer
     '''
-    if p[2]=='=':
+    if (len(p)==4):
         p[0] = Node("init_declarator", [p[1],p[3]], p[2])
     else:
         p[0] = Node("init_declarator", p[1], None)
@@ -337,6 +337,7 @@ def p_type_specifier(p):
                    | UNSIGNED
                    | struct_or_union_specifier
                    | enum_specifier
+                   | TYPE_NAME
     '''
     p[0] = Node("type_specifier", None, None)
 
@@ -346,11 +347,11 @@ def p_struct_or_union_specifier(p):
                               | struct_or_union OCP struct_declaration_list CCP
                               | struct_or_union ID
     '''
-    if p[3]==None:
+    if (len(p)==3):
         p[0] = Node("struct_or_union_specifier", p[1], p[2])
-    elif p[5]==None:
+    elif (len(p)==5):
         p[0] = Node("struct_or_union_specifier", [p[1],p[3]], [p[2],p[4]])
-    elif p[3]=='{':
+    else:
         p[0] = Node("struct_or_union_specifier", [p[1],p[4]], [p[2],p[3],p[5]])
 
 
@@ -366,7 +367,7 @@ def p_struct_declaration_list(p):
     struct_declaration_list : struct_declaration
                             | struct_declaration_list struct_declaration
     '''
-    if p[2]==None:
+    if (len(p)==2):
         p[0] = Node("struct_declaration_list", p[1], None)
     else:
         p[0] = Node("struct_declaration_list", [p[1],p[2]], None)
@@ -386,7 +387,7 @@ def p_specifier_qualifier_list(p):
                              | type_qualifier specifier_qualifier_list
                              | type_qualifier
     '''
-    if p[2]==None:
+    if (len(p)==2):
         p[0] = Node("specifier_qualifier_list", p[1], None)
     else:
         p[0] = Node("specifier_qualifier_list", [p[1],p[2]], None)
@@ -396,7 +397,7 @@ def p_struct_declarator_list(p):
     struct_declarator_list : struct_declarator
                            | struct_declarator_list COMMA struct_declarator
     '''
-    if p[2]==',':
+    if (len(p)==4):
         p[0] = Node("struct_declarator_list", [p[1],p[3]], p[2])
     else:
         p[0] = Node("struct_declarator_list", p[1], None)
@@ -408,11 +409,11 @@ def p_struct_declarator(p):
                       | COLON constant_expression
                       | declarator COLON constant_expression
     '''
-    if p[2]==None:
+    if (len(p)==2):
         p[0] = Node("struct_declarator", p[1], None)
-    elif p[1]==':':
+    elif (len(p)==3):
         p[0] = Node("struct_declarator", p[2], p[1])
-    elif p[2]==':':
+    elif (len(p)==4):
         p[0] = Node("struct_declarator", [p[1],p[3]], p[2])
 
 def p_enum_specifier(p):
@@ -421,9 +422,9 @@ def p_enum_specifier(p):
                    | ENUM ID OCP enumerator_list CCP
                    | ENUM ID
     '''
-    if p[3]==None:
+    if (len(p)==3):
         p[0] = Node("enum_specifier", None, p[2])
-    elif p[2]=='{':
+    elif (len(p)==5):
         p[0] = Node("enum_specifier", p[3], [p[2],p[4]])
     else:
         p[0] = Node("enum_specifier", p[4], [p[2],p[3],p[5]])
@@ -434,7 +435,7 @@ def p_enumerator_list(p):
     enumerator_list : enumerator
                     | enumerator_list COMMA enumerator
     '''
-    if p[2]==',':
+    if (len(p)==4):
         p[0] = Node("enumerator_list", [p[1],p[3]], p[2])
     else:
         p[0] = Node("enumerator_list", p[1], None)
@@ -445,7 +446,7 @@ def p_enumerator(p):
     enumerator : ID
                | ID ASSIGN constant_expression
     '''
-    if p[2]=='=':
+    if (len(p)==4):
         p[0] = Node("enumerator", [p[1],p[3]], p[2])
     else:
         p[0] = Node("enumerator", p[1], None)
@@ -464,7 +465,7 @@ def p_declarator(p):
     declarator : pointer direct_declarator
                | direct_declarator
     '''
-    if p[2]==None:
+    if (len(p)==3):
         p[0] = Node("declarator", [p[1],p[2]], None)
     else:
         p[0] = Node("declarator", p[1], None)
@@ -480,18 +481,15 @@ def p_direct_declarator(p):
                       | direct_declarator OP identifier_list CP
                       | direct_declarator OP CP
     '''
-    if p[2]==None:
+    if (len(p)==2):
         p[0] = Node("direct_declarator", None, p[1])
     elif p[1]=='(':
         p[0] = Node("direct_declarator", p[2], [p[1],p[3]])
-    elif p[4]==']':
-        p[0] = Node("direct_declarator", [p[1],p[3]], [p[2],p[4]])
-    elif p[3]==']':
+    elif (len(p)==4):
         p[0] = Node("direct_declarator", [p[1]], [p[2],p[3]])
-    elif p[4]==')':
+    elif (len(p)==5):
         p[0] = Node("direct_declarator", [p[1],p[3]], [p[2],p[4]])
-    elif p[3]==')':
-        p[0] = Node("direct_declarator", [p[1]], [p[2],p[3]])
+        
         
 
 def p_pointer(p):
@@ -501,9 +499,9 @@ def p_pointer(p):
             | MULTIPLY pointer
             | MULTIPLY type_qualifier_list pointer
     '''
-    if p[2]==None:
+    if (len(p)==2):
         p[0] = Node("pointer", None, p[1])
-    elif p[3]==None:
+    elif (len(p)==3):
         p[0] = Node("pointer", p[2], p[1])
     else:
         p[0] = Node("pointer", [p[2],p[3]], p[1])
