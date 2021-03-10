@@ -323,7 +323,7 @@ def p_storage_class_specifier(p):
                             | AUTO
                             | REGISTER
     '''
-    p[0] = Node("storage_class_specifier", None, None)
+    p[0] = None
 
     
 def p_type_specifier(p):
@@ -341,7 +341,7 @@ def p_type_specifier(p):
                    | enum_specifier
                    | TYPE_NAME
     '''
-    p[0] = Node("type_specifier", None, None)
+    p[0] = None
 
 def p_struct_or_union_specifier(p):
     '''
@@ -362,7 +362,7 @@ def p_struct_or_union(p):
     struct_or_union : STRUCT
                     | UNION
     '''
-    p[0] = Node("struct_or_union", None, None)
+    p[0] = None
 
 def p_struct_declaration_list(p):
     '''
@@ -429,7 +429,7 @@ def p_enum_specifier(p):
     elif (len(p)==5):
         p[0] = p[3]
     else:
-        p[0] = Node("enum_specifier", p[4], [p[2]])
+        p[0] = Node("enum_specifier", p[4], p[2])
 
 
 def p_enumerator_list(p):
@@ -459,7 +459,7 @@ def p_type_qualifier(p):
     type_qualifier : CONST
                    | VOLATILE
     '''
-    p[0] = Node("type_qualifier", None, None)
+    p[0] = None
     
 	
 def p_declarator(p):
@@ -470,7 +470,7 @@ def p_declarator(p):
     if (len(p)==3):
         p[0] = Node("declarator", [p[1],p[2]], None)
     else:
-        p[0] = Node("declarator", p[1], None)
+        p[0] = p[1]
 
         
 def p_direct_declarator(p):
@@ -515,21 +515,30 @@ def p_type_qualifier_list(p):
     type_qualifier_list : type_qualifier
                         | type_qualifier_list type_qualifier
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==3):
+        p[0] = Node("type_qualifier_list", [p[1],p[2]], None)
+    else:
+        p[0] = p[1]
 
 def p_parameter_type_list(p):
     '''
     parameter_type_list : parameter_list
                         | parameter_list COMMA ELLIPSIS
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==4):
+        p[0] = Node("parameter_type_list", p[1], [p[2], p[3]])
+    else:
+        p[0] = p[1]
 
 def p_parameter_list(p):
     '''
     parameter_list : parameter_declaration
                    | parameter_list COMMA parameter_declaration
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==4):
+        p[0] = Node("parameter_list", [p[1], p[3]], p[2])
+    else:
+        p[0] = p[1]
 
 def p_parameter_declaration(p):
     '''
@@ -537,21 +546,30 @@ def p_parameter_declaration(p):
                           | declaration_specifiers abstract_declarator
                           | declaration_specifiers
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==3):
+        p[0] = Node("parameter_declaration", [p[1], p[2]], None)
+    else:
+        p[0] = p[1]
 
 def p_identifier_list(p):
     '''
     identifier_list : ID
                     | identifier_list COMMA ID
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==4):
+        p[0] = Node("identifier_list", p[1], [p[2], p[3]])
+    else:
+        p[0] = Node("identifier_list", None, p[1])
 
 def p_type_name(p):
     '''
     type_name : specifier_qualifier_list
               | specifier_qualifier_list abstract_declarator
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==3):
+        p[0] = Node("type_name", [p[1],p[2]], None)
+    else:
+        p[0] = p[1]
 
 def p_abstract_declarator(p):
     '''
@@ -559,7 +577,10 @@ def p_abstract_declarator(p):
                         | direct_abstract_declarator
                         | pointer direct_abstract_declarator
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==3):
+        p[0] = Node("type_name", [p[1],p[2]], None)
+    else:
+        p[0] = p[1]
 
 def p_direct_abstract_declarator(p):
     '''
@@ -573,94 +594,101 @@ def p_direct_abstract_declarator(p):
                                | direct_abstract_declarator OP CP
                                | direct_abstract_declarator OP parameter_type_list CP
     '''
-    p[0] = Node('asdf', [p[1]])
+    if (len(p)==3):
+        p[0] = None
+    elif (len(p)==5):
+        p[0] = Node("type_name", [p[1],p[3]], None)
+    elif (p[1]=='(' or p[1]=='['):
+    	p[0] = p[2]
+    else:
+    	p[0] = p[1]
 
 def p_initializer(p):
-	'''
-	initializer : assignment_expression
-				| OCP initializer_list CCP
-				| OCP initializer_list COMMA CSP
-	'''
-	if len(p)==5:
-		p[0] = Node('initializer', [p[2]],p[3])
-	elif len(p)==4:
-		p[0] = p[2]
-	else:
-		p[0] = p[1]
-
-def p_initializer_list(p):
-	'''
-	initializer_list : initializer
-					 | initializer_list COMMA initializer
-	'''
-	if len(p)==2:
-		p[0] = p[1]
-	else:
-		p[0] = Node('initializer_list',[p[1],p[3]],p[2])
-
-def p_statement(p):
-	'''
-	statement : labeled_statement
-			  | compound_statement
-			  | expression_statement
-			  | selection_statement
-			  | iteration_statement
-			  | jump_statement
-	'''
+    '''
+    initializer : assignment_expression
+                | OCP initializer_list CCP
+                | OCP initializer_list COMMA CSP
+    '''
+    if len(p)==5:
+	p[0] = Node('initializer', [p[2]],p[3])
+    elif len(p)==4:
+	p[0] = p[2]
+    else:
 	p[0] = p[1]
 
+def p_initializer_list(p):
+    '''
+    initializer_list : initializer
+                     | initializer_list COMMA initializer
+    '''
+    if len(p)==2:
+	p[0] = p[1]
+    else:
+	p[0] = Node('initializer_list',[p[1],p[3]],p[2])
+
+def p_statement(p):
+    '''
+    statement : labeled_statement
+              | compound_statement
+              | expression_statement
+              | selection_statement
+              | iteration_statement
+              | jump_statement
+    '''
+    p[0] = p[1]
+
 def p_labeled_statement(p):
-	'''
-	labeled_statement : ID COLON statement
-					  | CASE constant_expression COLON statement
-					  | DEFAULT COLON statement
-	'''
-	if len(p)==4:
-		p[0] = Node('labeled_statement', p[3],[p[1],p[2]])
-	else:
-		p[0] = Node('labeled_statement',[p[2],p[4]],[p[1],p[3]])
+    '''
+    labeled_statement : ID COLON statement
+                      | CASE constant_expression COLON statement
+                      | DEFAULT COLON statement
+    '''
+    if len(p)==4:
+	p[0] = Node('labeled_statement', p[3],[p[1],p[2]])
+    else:
+	p[0] = Node('labeled_statement',[p[2],p[4]],[p[1],p[3]])
 
 def p_compound_statement(p):
-	'''
-	compound_statement : OCP CCP
-					   | OCP statement_list CCP
-					   | OCP declaration_list CCP
-					   | OCP declaration_list statement_list CCP
-	'''
-	if len(p)==4:
-		p[0] = p[2]
-	elif len(p)==5:
-		p[0] = Node('labeled_statement',[p[2],p[3]],None)# 1st rule ??
-	else:
-		p[0]=None		
-
+    '''
+    compound_statement : OCP CCP
+                       | OCP statement_list CCP
+                       | OCP declaration_list CCP
+                       | OCP declaration_list statement_list CCP
+    '''
+    if len(p)==4:
+	p[0] = p[2]
+    elif len(p)==5:
+	p[0] = Node('labeled_statement',[p[2],p[3]],None)# 1st rule ??
 
 def p_declaration_list(p):
     '''
     declaration_list : declaration
                      | declaration_list declaration
     '''
-    p[0] = Node('asdf', [p[1]])
+    if len(p)==2:
+	p[0] = p[1]
+    elif len(p)==3:
+	p[0] = Node('declaration_list',[p[1],p[2]],None)
 
 def p_statement_list(p):
-	'''
-	statement_list : statement
-				   | statement_list statement
-	'''
-	if len(p)==2:
-		p[0] = p[1]
-	else:
-		p[0] = Node('statement_list',[p[1],p[2]],None)
+    '''
+    statement_list : statement
+                   | statement_list statement
+    '''
+    if len(p)==2:
+	p[0] = p[1]
+    else:
+	p[0] = Node('statement_list',[p[1],p[2]],None)
 
 def p_expression_statement(p):
-	'''
-	expression_statement : SEMICOLON
-						 | expression SEMICOLON
-	'''
-	if len(p)==2:
-		p[0] = Node('expression_statement',None,p[1])
-	else:
-		p[0] = Node('expression_statement',p[1],p[2])
+    '''
+    expression_statement : SEMICOLON
+                         | expression SEMICOLON
+    '''
+    if len(p)==2:
+	p[0] = Node('expression_statement',None,p[1])
+    else:
+	p[0] = Node('expression_statement',p[1],p[2])
 
 def p_selection_statement(p):
     '''
@@ -672,49 +700,52 @@ def p_selection_statement(p):
     elif(len(p) == 8): p[0] = Node('if-then-else', [p[3], p[5], p[7]], None)
 	
 def p_iteration_statement(p):
-	'''
-	iteration_statement : WHILE OP expression CP statement
-						| DO statement WHILE OP expression CP SEMICOLON
-						| FOR OP expression_statement expression_statement CP statement
-						| FOR OP expression_statement expression_statement expression CP statement
-	'''
-	if p[1]=='while':
-		p[0] = Node('while', [p[3], p[5]], None)
-	elif p[1]=='do_while':
-		p[0] = Node('do_while', [p[2], p[5]], p[6])
-	elif len(p)==8:
-		p[0] = Node('for_2', [p[3],p[4], p[5],p[7]], None)
-	else:
-		p[0] = Node('for_1', [p[3],p[4], p[6]], None)
-
+    '''
+    iteration_statement : WHILE OP expression CP statement
+                        | DO statement WHILE OP expression CP SEMICOLON
+                        | FOR OP expression_statement expression_statement CP statement
+                        | FOR OP expression_statement expression_statement expression CP statement
+    '''
+    if p[1]=='while':
+	p[0] = Node('while', [p[3], p[5]], None)
+    elif p[1]=='do_while':
+	p[0] = Node('do_while', [p[2], p[5]], p[6])
+    elif len(p)==8:
+	p[0] = Node('for_2', [p[3],p[4], p[5],p[7]], None)
+    else:
+	p[0] = Node('for_1', [p[3],p[4], p[6]], None)
+	
 def p_jump_statement(p):
-	'''
-	jump_statement : GOTO ID SEMICOLON
-				   | CONTINUE SEMICOLON
-				   | BREAK SEMICOLON
-				   | RETURN SEMICOLON
-				   | RETURN expression SEMICOLON
-	'''
-	if len(p)==4 && p[1]=='return':#4
-		p[0] = Node('jump', [p[2]],[p[1],p[3]])
-	elif len(p)==4:
-		p[0] = Node('asdf', None, [p[1],p[2],p[3]])
-	else:
-		p[0] = Node('asdf',None, [p[1],p[2]])
+    '''
+    jump_statement : GOTO ID SEMICOLON
+                   | CONTINUE SEMICOLON
+                   | BREAK SEMICOLON
+                   | RETURN SEMICOLON
+                   | RETURN expression SEMICOLON
+    '''
+    if len(p)==4 and p[1]=='return':#4
+	p[0] = Node('jump', [p[2]],[p[1],p[3]])
+    elif len(p)==4:
+	p[0] = Node('asdf', None, [p[1],p[2],p[3]])
+    else:
+	p[0] = Node('asdf',None, [p[1],p[2]])
 
 def p_translation_unit(p):
     '''
     translation_unit : external_declaration
                      | translation_unit external_declaration
     '''
-    p[0] = Node('asdf', [p[1]])
+    if len(p)==2:
+	p[0] = p[1]
+    elif len(p)==3:
+	p[0] = Node('translation_unit',[p[1],p[2]],None)
 
 def p_external_declaration(p):
     '''
     external_declaration : function_definition
                          | declaration
     '''
-    p[0] = Node('asdf', [p[1]])
+    p[0] = p[1]
 
 def p_function_definition(p):
     '''
@@ -723,7 +754,12 @@ def p_function_definition(p):
                         | declarator declaration_list compound_statement
                         | declarator compound_statement
     '''
-    p[0] = Node('asdf', [p[1]])
+    if len(p)==3:
+	p[0] = Node('declaration_list',[p[1],p[2]],None)
+    elif len(p)==4:
+	p[0] = Node('declaration_list',[p[1],p[2],p[3]],None)
+    elif len(p)==5:
+	p[0] = Node('declaration_list',[p[1],p[2],p[3],p[4]],None)
 
 def p_error(p):
     print("error for ", p)
