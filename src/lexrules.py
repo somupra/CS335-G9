@@ -30,9 +30,10 @@ reserved = {
     'void': 'VOID',
     'volatile': 'VOLATILE',
     'while': 'WHILE',
-    'main': 'MAIN',
+    # 'main': 'MAIN',
     'include': 'INCLUDE',
-    'char': 'CHAR'
+    'char': 'CHAR',
+    'type_name': 'TYPE_NAME'
 }
 
 tokens = ['NUMBER', 'STRING', 'CHAR_CONST',

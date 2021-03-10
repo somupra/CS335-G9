@@ -1,5 +1,6 @@
 import lexrules
 import ply.lex as lex
+from grammar import parser
 
 def find_column(input, token):
     line_start = input.rfind('\n', 0, token.lexpos) + 1
@@ -21,6 +22,11 @@ if __name__ == '__main__':
     import sys
     with open(sys.argv[1]) as f:
         input = f.read()
+
+    obj = parser.parse(input=input, lexer=lexer)
+    print(obj)
+    
+    exit()
 
     lexer.input(input)
     output = []
