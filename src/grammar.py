@@ -576,47 +576,62 @@ def p_direct_abstract_declarator(p):
     p[0] = Node('asdf', [p[1]])
 
 def p_initializer(p):
-    '''
-    initializer : assignment_expression
-                | OCP initializer_list CCP
-                | OCP initializer_list COMMA CSP
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	initializer : assignment_expression
+				| OCP initializer_list CCP
+				| OCP initializer_list COMMA CSP
+	'''
+	if len(p)==5:
+		p[0] = Node('initializer', [p[2]],p[3])
+	elif len(p)==4:
+		p[0] = p[2]
+	else:
+		p[0] = p[1]
 
 def p_initializer_list(p):
-    '''
-    initializer_list : initializer
-                     | initializer_list COMMA initializer
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	initializer_list : initializer
+					 | initializer_list COMMA initializer
+	'''
+	if len(p)==2:
+		p[0] = p[1]
+	else:
+		p[0] = Node('initializer_list',[p[1],p[3]],p[2])
 
 def p_statement(p):
-    '''
-    statement : labeled_statement
-              | compound_statement
-              | expression_statement
-              | selection_statement
-              | iteration_statement
-              | jump_statement
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	statement : labeled_statement
+			  | compound_statement
+			  | expression_statement
+			  | selection_statement
+			  | iteration_statement
+			  | jump_statement
+	'''
+	p[0] = p[1]
 
 def p_labeled_statement(p):
-    '''
-    labeled_statement : ID COLON statement
-                      | CASE constant_expression COLON statement
-                      | DEFAULT COLON statement
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	labeled_statement : ID COLON statement
+					  | CASE constant_expression COLON statement
+					  | DEFAULT COLON statement
+	'''
+	if len(p)==4:
+		p[0] = Node('labeled_statement', p[3],[p[1],p[2]])
+	else:
+		p[0] = Node('labeled_statement',[p[2],p[4]],[p[1],p[3]])
 
 def p_compound_statement(p):
-    '''
-    compound_statement : OCP CCP
-                       | OCP statement_list CCP
-                       | OCP declaration_list CCP
-                       | OCP declaration_list statement_list CCP
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	compound_statement : OCP CCP
+					   | OCP statement_list CCP
+					   | OCP declaration_list CCP
+					   | OCP declaration_list statement_list CCP
+	'''
+	if len(p)==4:
+		p[0] = p[2]
+	elif len(p)==5:
+		p[0] = Node('labeled_statement',[p[2],p[3]],None)# 1st rule ??
+
 
 def p_declaration_list(p):
     '''
@@ -626,18 +641,24 @@ def p_declaration_list(p):
     p[0] = Node('asdf', [p[1]])
 
 def p_statement_list(p):
-    '''
-    statement_list : statement
-                   | statement_list statement
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	statement_list : statement
+				   | statement_list statement
+	'''
+	if len(p)==2:
+		p[0] = p[1]
+	else:
+		p[0] = Node('statement_list',[p[1],p[2]],None)
 
 def p_expression_statement(p):
-    '''
-    expression_statement : SEMICOLON
-                         | expression SEMICOLON
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	expression_statement : SEMICOLON
+						 | expression SEMICOLON
+	'''
+	if len(p)==2:
+		p[0] = Node('expression_statement',None,p[1])
+	else:
+		p[0] = Node('expression_statement',p[1],p[2])
 
 def p_selection_statement(p):
     '''
@@ -649,23 +670,35 @@ def p_selection_statement(p):
     elif(len(p) == 8): p[0] = Node('if-then-else', [p[3], p[5], p[7]], None)
 	
 def p_iteration_statement(p):
-    '''
-    iteration_statement : WHILE OP expression CP statement
-                        | DO statement WHILE OP expression CP SEMICOLON
-                        | FOR OP expression_statement expression_statement CP statement
-                        | FOR OP expression_statement expression_statement expression CP statement
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	iteration_statement : WHILE OP expression CP statement
+						| DO statement WHILE OP expression CP SEMICOLON
+						| FOR OP expression_statement expression_statement CP statement
+						| FOR OP expression_statement expression_statement expression CP statement
+	'''
+	if p[1]=='while':
+		p[0] = Node('while', [p[3], p[5]], None)
+	elif p[1]=='do_while':
+		p[0] = Node('do_while', [p[2], p[5]], p[6])
+	elif len(p)==8:
+		p[0] = Node('for_2', [p[3],p[4], p[5],p[7]], None)
+	else:
+		p[0] = Node('for_1', [p[3],p[4], p[6]], None)
 
 def p_jump_statement(p):
-    '''
-    jump_statement : GOTO ID SEMICOLON
-                   | CONTINUE SEMICOLON
-                   | BREAK SEMICOLON
-                   | RETURN SEMICOLON
-                   | RETURN expression SEMICOLON
-    '''
-    p[0] = Node('asdf', [p[1]])
+	'''
+	jump_statement : GOTO ID SEMICOLON
+				   | CONTINUE SEMICOLON
+				   | BREAK SEMICOLON
+				   | RETURN SEMICOLON
+				   | RETURN expression SEMICOLON
+	'''
+	if len(p)==4 && p[1]=='return':#4
+		p[0] = Node('jump', [p[2]],[p[1],p[3]])
+	elif len(p)==4:
+		p[0] = Node('asdf', None, [p[1],p[2],p[3]])
+	else:
+		p[0] = Node('asdf',None, [p[1],p[2]])
 
 def p_translation_unit(p):
     '''
