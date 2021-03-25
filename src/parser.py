@@ -9,7 +9,7 @@ def bfs(node):
             print(node)
             return
 
-        print(node.leaf)
+        if node.leaf!=None : print(node.leaf)
         for c in node.children:
             bfs(c)
     return
@@ -71,6 +71,7 @@ if __name__ == '__main__':
         input = f.read()
 
     obj = parser.parse(input=input, lexer=lexer)
+    bfs(obj)
     print(obj)
     dfs(obj,0)
     
