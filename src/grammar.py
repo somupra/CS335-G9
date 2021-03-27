@@ -2,7 +2,7 @@ import sys
 import ply.yacc as yacc
 from lexrules import tokens
 
-class Node:
+
     def __init__(self, type, children=None, leaf=None):
         self.type = type
         if children:
