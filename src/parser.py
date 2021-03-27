@@ -6,10 +6,10 @@ import pydot
 def bfs(node):
     if node:
         if isinstance(node, str):
-            print(node)
+            #print("***",node)
             return
 
-        if node.leaf!=None : print(node.leaf)
+        if node.leaf!=None : print(node.leaf,node.type)
         for c in node.children:
             bfs(c)
     return
@@ -23,41 +23,47 @@ class Node:
         else:
             self.children = [ ]
         self.leaf = leaf
-        
-i=0
-def dfs(node,i):
-    graph = pydot.Dot('my_graph', graph_type='graph', bgcolor='yellow')
-    graph.add_node(pydot.Node(i,label = node.type, shape='circle'))
-    parent = i
-    i+=1
-    
+
+node_num = 0
+def dfs(node,parent,graph):
+    #print("PARENT IS", parent)
+    leaf_present=False
+    if node.leaf:
+        child = node.leaf
+        #print("###########", child)
+        if isinstance(child,str):
+            global node_num
+            node_num = node_num + 1
+            #print("LEAF NODE IS",node_num,node.type)
+            #print("+++++++++++++++", child)
+            graph.add_node(pydot.Node(node_num,label = child, shape='circle'))  
+            graph.add_edge(pydot.Edge(parent, node_num))
+            parent = node_num
+        else:
+            #print("\n ADDING leaf from ANOTHER DFS CALL\n")
+            dfs(child,parent,graph)
+            parent = node_num #CHECKK ****
+
+
     
     if node.children:
         for child in node.children:
             if child is None:
                 continue
             if isinstance(child,str):
-                graph.add_node(pydot.Node(i,label = child, shape='circle'))
+                node_num+=1 # Increment the node number just before adding a node.
+                #print("-----------------leaf and child added simultaneously-------------------")
+                graph.add_node(pydot.Node(node_num,label = child, shape='circle'))
+                graph.add_edge(pydot.Edge(parent, node_num))
             else:
-                graph.add_node(pydot.Node(i,label = child.type, shape='circle'))
-            graph.add_edge(pydot.Edge(parent, i))
-            i+=1
-            if isinstance(child,str):
-                continue
-            dfs(child,i)
-            
-    else:
-        if node.leaf:
-            for child in node.leaf:
-                if child is None:
-                    continue
-                if isinstance(child,str):
-                    graph.add_node(pydot.Node(i,label = child, shape='circle'))
-                else:
-                    graph.add_node(pydot.Node(i,label = child.type, shape='circle'))
-                graph.add_edge(pydot.Edge(parent, i))
-                i+=1
-    graph.write_raw('output_raw.dot')
+                #print(node.leaf,"  111  ",node.type)
+                dfs(child,parent,graph)
+
+                  
+
+    
+
+
 
 
 
@@ -72,6 +78,10 @@ if __name__ == '__main__':
 
     obj = parser.parse(input=input, lexer=lexer)
     bfs(obj)
-    print(obj)
-    dfs(obj,0)
-    
+    #print(obj)
+    graph = pydot.Dot('my_graph', graph_type='graph', bgcolor='yellow')
+    graph.add_node(pydot.Node(0,label = obj.type, shape='circle'))
+    for child in obj.children:
+        dfs(child,0,graph)
+    graph.write_raw('output_raw.dot')
+    # I'm passing the parent to the dfs function call.
