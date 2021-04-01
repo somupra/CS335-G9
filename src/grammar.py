@@ -766,11 +766,11 @@ def p_function_definition(p):
                         | declarator compound_statement
     '''
     if len(p)==3:
-	p[0] = Node('declaration_list',[p[1],p[2]],None)
+	    p[0] = Node('declaration_list',[p[1],p[2]],None)
     elif len(p)==4:
-	p[0] = Node('declaration_list',[p[1],p[2],p[3]],None)
+	    p[0] = Node('declaration_list',[p[1],p[2],p[3]],None)
     elif len(p)==5:
-	p[0] = Node('declaration_list',[p[1],p[2],p[3],p[4]],None)
+	    p[0] = Node('declaration_list',[p[1],p[2],p[3],p[4]],None)
 
 def p_error(p):
     print("error for ", p)
