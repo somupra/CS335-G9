@@ -1,34 +1,75 @@
 import sys
 import ply.yacc as yacc
 from lexrules import tokens
+import functions
 
-i=0
+
 
 class Node:
-	def __init__(self, type, children=None, leaf=None):
-		self.type = type
+	def __init__(self, typex, children=None, leaf=None):
+		self.name = typex
 		if children:
 			self.children = children
 		else:
 			self.children = [ ]
 		self.leaf = leaf
+		self.type = typex
+		self.variables = []
+		self.types_of_var = []
 
 start = 'translation_unit'
 
 #CHECKK string added
+#CHECKK definitions changed, one more level added
 def p_primary_expression(p):
 	'''
-	primary_expression : ID
-						| CHAR_CONST
-						| STRING
-						| NUMBER
+	primary_expression : id
+						| char_const
+						| string
+						| number
 						| OP expression CP
 	'''
 	if p[1]=='(':
 	  p[0] = p[2]
 	else:
-	  p[0] = Node("primary_expression", None, p[1])
+		p[0] = Node("primary_expression", [p[1]])
+		p[0].type = p[1].type
+
+def p_id(p):
+	'''
+	id : ID
+	'''
+	p[0] = Node("ID", None,p[1])
+	p[0].name = 'id'
+	x = functions.check_in_var(p[1])
+	if x==None:
+		p[0].type = 'EMPTY'
+		print("UNDECLARED VARIABLE ERROR")
+	else:
+		p[0].type = x['type']
+
+def p_char_const(p):
+	'''
+	char_const : CHAR_CONST
+	'''
+	p[0] = Node("char_const", None,p[1])
+	p[0].type="char"
+
+def p_string(p):
+	'''
+	string : STRING
+	'''
+	p[0] = Node("string", None,p[1])
+	p[0].type="string"
 	
+def p_number(p):
+	'''
+	number : NUMBER
+	'''
+	p[0] = Node("number", None,p[1])
+	p[0].type="int"
+
+
 def p_postfix_expression(p):
 	'''
 	postfix_expression : primary_expression
@@ -288,10 +329,22 @@ def p_declaration(p):
 	declaration : declaration_specifiers SEMICOLON
 				| declaration_specifiers init_declarator_list SEMICOLON
 	'''
-	if (len(p)==3):
+	if len(p)==3:
 		p[0] = p[1]
 	else:
 		p[0] = Node("declaration", [p[1],p[2]], None)
+		for i in range(0,len(p[2].variables)):
+			# int x;
+			if p[2].types_of_var[i] == 'empty':
+				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
+				functions.make_var_entry(p[2].variables[i],p[1].type)
+				p[2].types_of_var[i] = p[1].type
+			# int x = 5;
+			elif p[1].type!=p[2].types_of_var[i]:
+				print("TYPE ERROR IN DECLARATION")
+				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
+		p[0].type=p[1].type
+
 
 
 def p_declaration_specifiers(p):
@@ -316,9 +369,14 @@ def p_init_declarator_list(p):
 	'''
 	if (len(p)==4):
 		p[0] = Node("init_declarator_list", [p[1],p[3]], None)
+		p[0].variables=p[1].variables
+		p[0].types_of_var=p[1].types_of_var
+		p[0].variables+=p[3].variables
+		p[0].types_of_var+=p[3].types_of_var
 	else:
 		p[0] = p[1]
-		
+		p[0].variables+=p[1].variables
+		p[0].types_of_var+=p[1].types_of_var
 
 def p_init_declarator(p):
 	'''
@@ -327,9 +385,19 @@ def p_init_declarator(p):
 	'''
 	if (len(p)==4):
 		p[0] = Node("init_declarator", [p[1],p[3]], p[2])
+		p[1].type = p[3].type
+		p[0].type = p[1].type #Inherited
+		# Add the actual type of ID 
+		functions.make_var_entry(p[1].variables[0],p[3].type)
+		p[1].types_of_var[0] = p[3].type
+		p[0].variables.append(p[1].variables[0])
+		p[0].types_of_var.append(p[1].types_of_var[0])
 	else:
 		p[0] = p[1]
-
+		p[1].type="empty"
+		p[0].type=p[1].type
+		p[0].variables.append(p[1].variables[0])
+		p[0].types_of_var.append(p[1].types_of_var[0])
 
 def p_storage_class_specifier(p):
 	'''
@@ -358,13 +426,14 @@ def p_type_specifier(p):
 				   | TYPE_NAME
 	'''
 	if isinstance(p[1],str):
-		p[0] = None
+		p[0] = Node('type_specifier')
+		p[0].type = p[1]
 	else:
 		p[0] = p[1]
 
 def p_struct_or_union_specifier(p):
 	'''
-	struct_or_union_specifier : struct_or_union ID OCP struct_declaration_list CCP
+	struct_or_union_specifier : struct_or_union ID ocp struct_declaration_list ccp
 							  | struct_or_union OCP struct_declaration_list CCP
 							  | struct_or_union ID
 	'''
@@ -374,6 +443,7 @@ def p_struct_or_union_specifier(p):
 		p[0] = Node("struct_or_union_specifier", [p[1],p[3]], None)
 	else:
 		p[0] = Node("struct_or_union_specifier", [p[1],p[2],p[4]], 'struct/union')
+		functions.make_struct_entry(p[2])
 
 
 def p_struct_or_union(p):
@@ -399,7 +469,9 @@ def p_struct_declaration(p):
 	struct_declaration : specifier_qualifier_list struct_declarator_list SEMICOLON
 	'''
 	p[0] = Node("struct_declaration", [p[1],p[2]], None)
-
+	for x in p[2].variables:
+		functions.make_var_entry(x,p[1].type)
+	p[0].type=p[1].type
 
 def p_specifier_qualifier_list(p):
 	'''
@@ -420,6 +492,11 @@ def p_struct_declarator_list(p):
 	'''
 	if (len(p)==4):
 		p[0] = Node("struct_declarator_list", [p[1],p[3]], None)
+		p[0].variables=p[1].variables
+		p[0].types_of_var=p[1].types_of_var
+		p[0].variables+=p[3].variables
+		p[0].types_of_var+=p[3].types_of_var
+
 	else:
 		p[0] = p[1]
 
@@ -486,7 +563,7 @@ def p_declarator(p):
 	declarator : pointer direct_declarator
 			   | direct_declarator
 	'''
-	if (len(p)==3):
+	if len(p)==3:
 		p[0] = Node("declarator", [p[1],p[2]], None)
 	else:
 		p[0] = p[1]
@@ -504,14 +581,27 @@ def p_direct_declarator(p):
 	'''
 	if len(p)==2:
 		p[0] = Node("direct_declarator", None, p[1])
-	elif p[1]=='(':
+		p[0].type = 'empty'
+		p[0].variables.append(p[1])
+		p[0].types_of_var.append("empty")
+	elif p[1]=='(': 
 		p[0] = p[2]
-	elif (len(p)==4):
+	elif len(p)==4:
 		p[0] = p[1]
-	elif (len(p)==5):
+		if p[1]=='(':#Redundant
+			p[0].variables=p[1].variables
+			p[0].types_of_var=p[1].types_of_var
+	elif len(p)==5:
 		p[0] = Node("direct_declarator", [p[3]], p[1]) #CHECKK Direct decl made leaf so that param_type_list, id_list can attatch to that node
-		
-		
+		if p[2]=='(': # Making function variable entry
+			# Add all the info in the list. Make function and params/ids i.e args entry in symtab in p_func_def
+			p[0].variables=p[1].variables
+			p[0].types_of_var=p[1].types_of_var
+			p[0].variables+=p[3].variables
+			p[0].types_of_var+=p[3].types_of_var
+		else:
+			p[0].variables=p[1].variables
+			p[0].types_of_var=p[1].types_of_var
 
 def p_pointer(p):
 	'''
@@ -556,8 +646,14 @@ def p_parameter_list(p):
 	'''
 	if (len(p)==4):
 		p[0] = Node("parameter_list", [p[1], p[3]], None)
+		p[0].variables=p[1].variables
+		p[0].types_of_var=p[1].types_of_var
+		p[0].variables+=p[3].variables
+		p[0].types_of_var+=p[3].types_of_var
 	else:
 		p[0] = p[1]
+		p[0].variables+=p[1].variables
+		p[0].types_of_var+=p[1].types_of_var
 
 def p_parameter_declaration(p):
 	'''
@@ -567,6 +663,10 @@ def p_parameter_declaration(p):
 	'''
 	if (len(p)==3):
 		p[0] = Node("parameter_declaration", [p[1], p[2]], None)
+		p[2].types_of_var[0]=p[1].type
+		p[0].type=p[1].type
+		p[0].variables=p[2].variables
+		p[0].types_of_var=p[2].types_of_var
 	else:
 		p[0] = p[1]
 
@@ -577,8 +677,14 @@ def p_identifier_list(p):
 	'''
 	if (len(p)==4):
 		p[0] = Node("identifier_list", [p[1],p[3]],  None)
+		p[0].variables=p[1].variables
+		p[0].types_of_var=p[1].types_of_var
+		p[0].variables.append(p[3])
+		p[0].types_of_var.append('empty')
 	else:
 		p[0] = Node("identifier_list", None, p[1])
+		p[0].variables.append(p[1])
+		p[0].types_of_var.append('empty')
 
 def p_type_name(p):
 	'''
@@ -674,9 +780,9 @@ def p_labeled_statement(p):
 def p_compound_statement(p):
 	'''
 	compound_statement : OCP CCP
-					   | OCP statement_list CCP
-					   | OCP declaration_list CCP
-					   | OCP declaration_list statement_list CCP
+					   | ocp statement_list ccp
+					   | ocp declaration_list ccp
+					   | ocp declaration_list statement_list ccp
 	'''
 	if len(p)==4:
 		p[0] = Node('compound_statement',[p[2]],'{}')
@@ -684,6 +790,18 @@ def p_compound_statement(p):
 		p[0] = Node('compound_statement',[p[2],p[3]],'{}')
 	else:
 		p[0]=None		
+
+def p_ocp(p):
+	'''
+	ocp : OCP
+	'''
+	functions.newscope()
+
+def p_ccp(p):
+	'''
+	ccp : CCP
+	'''
+	functions.endscope()
 
 
 def p_declaration_list(p):
@@ -786,10 +904,17 @@ def p_function_definition(p):
 						| declarator compound_statement
 	'''
 	if len(p)==3:
+		print("func_defn_1")
 		p[0] = Node('func_defn_1',[p[1],p[2]],None)
 	elif len(p)==4:
+		print("func_defn_2")
 		p[0] = Node('func_defn_2',[p[1],p[2],p[3]],None)
+		p[2].type=p[1].type
+		p[0].type = p[1].type
+		# Make all the entries : func name in parent symtab and all args in 
+		functions.make_func_entry(p[2].variables,p[2].types_of_var)
 	elif len(p)==5:
+		print("func_defn_3")
 		p[0] = Node('func_defn_3',[p[1],p[2],p[3],p[4]],None)
 
 def p_error(p):
