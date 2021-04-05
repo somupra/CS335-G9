@@ -36,7 +36,7 @@ reserved = {
     'type_name': 'TYPE_NAME'
 }
 
-tokens = ['NUMBER', 'STRING', 'CHAR_CONST',
+tokens = ['I_NUMBER', 'F_NUMBER', 'STRING', 'CHAR_CONST',
           'ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE', 'EQUAL', 'ASSIGN', 'EXPONENT', 'MOD', 'XOR',
           'LSASSIGN', 'RSASSIGN', 'MULASSIGN', 'DIVASSIGN', 'PLUSASSIGN', 'MINUSASSIGN',
           'MODASSIGN', 'XORASSIGN', 'ORASSIGN', 'ANDASSIGN', 'ELLIPSIS', 'LSHIFT', 'RSHIFT',
@@ -137,17 +137,21 @@ exp         = r'[Ee][+-]?' + digit + r'+'
 fs          = r'(f|F|l|L)'
 ls          = r'(u|U|l|L)*'
 
-number  =   r'(0[xX](' + hex + r')+\.p[+-]?(' + digit + r')+([LlfF])?)'                +\
-            r'|(0[xX](' + hex + r')+(' + ls + r')?)'                                   +\
-            r'|(' + digit + r'*\.(' + digit + r')*((' + exp + r')?' + fs + r'?))'      +\
+fnumber =   r'(0[xX](' + hex + r')+\.p[+-]?(' + digit + r')+([LlfF])?)'                +\
+            r'|(' + digit + r'*\.(' + digit + r')*((' + exp + r')?' + fs + r'?))'
+ 
+number  =   r'(0[xX](' + hex + r')+(' + ls + r')?)'                                   +\
             r'|(' + digit + r'+(' + exp + r')(' + fs + r')?)'                          +\
             r'|((0)*(' + digit + r')+(' + ls + r')?)'                                  +\
             r'|((' + digit + r')+(' + ls + r')?)'                                      +\
             r'|' + digit
 
+@TOKEN(fnumber)
+def t_F_NUMBER(t) :
+    return t
 
 @TOKEN(number)
-def t_NUMBER(t) :
+def t_I_NUMBER(t) :
     return t
 
 def t_error(t) :
