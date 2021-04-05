@@ -1,16 +1,16 @@
-long area(int length, int breadth)
+int area(int length, int breadth)
 {
-	long a;
-	a = (long)length*(long)breadth;
+	int a;
+	a = (int)length*(int)breadth;
 	return a;
 }
-long perimeter(int length, int breadth)
+int perimeter(int length, int breadth)
 {
 	return 2*length+2*breadth;
 }
 int main(){
 	int l=2,b=20;
-	long a = area(l,b);
-	long p = perimeter(l,b);
+	int a = area(l,b);
+	int p = perimeter(l,b);
 	return 0;
 }

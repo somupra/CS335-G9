@@ -59,7 +59,7 @@ def p_id(p):
 		print("UNDECLARED VARIABLE ERROR")
 	else:
 		p[0].type = x['type']
-		#p[0].size = size[p[0].type]
+		p[0].size = size[p[0].type]
 
 def p_char_const(p):
 	'''
