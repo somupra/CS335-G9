@@ -32,7 +32,8 @@ def p_primary_expression(p):
 	primary_expression : id
 						| char_const
 						| string
-						| number
+						| int
+						| float
 						| OP expression CP
 	'''
 	if p[1]=='(':
@@ -78,18 +79,24 @@ def p_string(p):
 	p[0].type = 'STRING'
 	p[0].size = 4
 	
-def p_number(p):
+def p_int(p):
 	'''
-	number : NUMBER
+	int : I_NUMBER
 	'''
-	p[0] = Node("number", None,p[1])
-	p[0].name = "number"
+	p[0] = Node("int", None,p[1])
+	p[0].name = "int"
 	p[0].type = 'INT'
-	#if(p[1].is_digit()):
-	#	p[0].type = 'INT'
-	#else :
-	#	p[0].type = 'FLOAT'
-       
+	p[0].size = 4
+
+def p_float(p):
+	'''
+	float : F_NUMBER
+	'''
+	p[0] = Node("float", None,p[1])
+	p[0].name = "float"
+	p[0].type = 'FLOAT'
+	p[0].size = 4
+    
 def p_postfix_expression(p):
 	'''
 	postfix_expression : primary_expression
