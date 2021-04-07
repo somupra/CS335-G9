@@ -1260,10 +1260,17 @@ def p_function_definition(p):
 						| declarator compound_statement
 	'''
 	if len(p)==3:
+		print("func_defn_1")
 		p[0] = Node('func_defn_1',[p[1],p[2]],None)
 	elif len(p)==4:
+		print("func_defn_2")
 		p[0] = Node('func_defn_2',[p[1],p[2],p[3]],None)
+		p[2].type=p[1].type
+		p[0].type = p[1].type
+		# Make all the entries : func name in parent symtab and all args in 
+		functions.make_func_entry(p[2].variables,p[2].types_of_var)
 	elif len(p)==5:
+		print("func_defn_3")
 		p[0] = Node('func_defn_3',[p[1],p[2],p[3],p[4]],None)
 	p[0].name = 'function_definition'
 
