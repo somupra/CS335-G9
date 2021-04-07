@@ -830,7 +830,7 @@ def p_type_qualifier(p):
 	type_qualifier : CONST
 				   | VOLATILE
 	'''
-	p[0] = None
+	p[0] = Node('type_qualifier')
 	p[0].name = 'type_qualifier'
 	#if(p[1] == 'CONST'):
             #p[0].other['CONSTANT'] = 1
@@ -1157,6 +1157,8 @@ def p_expression_statement(p):
 			print('TYPE_ERROR')
 		else : 
 			p[0].type = 'VOID'
+	else:
+		p[0] = Node('exr-stmt')
 	p[0].name = 'expression_statement'
 	
 
