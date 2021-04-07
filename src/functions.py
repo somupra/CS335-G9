@@ -12,7 +12,7 @@ class SymbolTable:
         self.structures = {}
         # struct name : SymbolTableindex
         self.functions = {}
-        # Function name : SymbolTableindex
+        # Function name : (SymbolTableindex,no.of args)
         self.ret_type = None # In case the symbol table is that of a function, we can store its return type.
         self.num_args = 0 #NUmber of args info for a function
 
@@ -44,7 +44,7 @@ def endscope():
 def make_func_entry(names,types):
     #print("TABLE JUST MADE", table_just_made)
     parent_idx = symtabtrack[-1] # Last index is the parent of this new one
-    allsymboltables[parent_idx].functions[names[0]] = table_just_made # Changing the type of variable to function
+    allsymboltables[parent_idx].functions[names[0]] = [table_just_made, len(names)-1]# Changing the type of variable to function
     for i in range(1,len(names)):
         allsymboltables[table_just_made].variables[names[i]] = {} # Changing the type of variable to function
         allsymboltables[table_just_made].variables[names[i]]["type"]=types[i]
@@ -69,7 +69,7 @@ def check_in_fs(name):
     curr_table = allsymboltables[symtabtrack[-1]]
     while(1): # Returning the index of local symtab of the particular func name
         if curr_table.functions.get(name)!=None:
-            return curr_table.functions.get(name)
+            return curr_table.functions.get(name[0])
         if curr_table.structures.get(name)!=None:
             return curr_table.structures.get(name)
         if curr_table.parent_idx==None:
@@ -85,6 +85,7 @@ def make_var_entry(name,type):
 
 def print_out(i):
     print("TABLE NUMBER ",i)
+    print("CHILDREN",allsymboltables[i].child_idx,"\n")
     print("VARS :")
     for x in allsymboltables[i].variables:
         print(x,allsymboltables[i].variables[x])
