@@ -226,6 +226,7 @@ def print_to_csv(i,filename):
             file.write(output)
 
 def give_out(filename):
+    base_dir = "tests/parser/output/"
     important = "\x1b[36m"
     bold = "\033[1m"
     reset = "\x1B[0m"
@@ -233,6 +234,8 @@ def give_out(filename):
     print(f"\n\n{bold}{important} SYMBOL TABLE {reset}\n\n")
     print_out(0, 0)
 
-    op_filename = "output_"+filename[:-2]+".txt"
+    slash = str(filename).rfind("/")
+    filename = filename[slash+1 : ]
+    op_filename = base_dir + "output_"+filename[:-2]+".txt"
     print_to_csv(0, op_filename)
 
