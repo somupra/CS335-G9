@@ -47,6 +47,7 @@ def p_primary_expression(p):
 	else:
 		p[0] = Node("primary_expression", [p[1]])
 		p[0].type = p[1].type
+		p[0].variables = p[1].variables
 		p[0].size = p[1].size
 	p[0].name = 'primary_expression'	
 
@@ -56,7 +57,7 @@ def p_id(p):
 	'''
 	p[0] = Node("ID", None,p[1])
 	p[0].name = 'id'
-	p[0].variables+=p[1]
+	p[0].variables.append(p[1])
 	x = st.check_in_var(p[1])
 	if x==None:
 		p[0].type = 'EMPTY'
@@ -682,10 +683,10 @@ def p_declaration(p):
 			elif p[1].type!=p[2].types_of_var[i]:
 				print("TYPE ERROR IN DECLARATION")
 				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
-				if st.var_curr_scope_exists(p[2].variables[i]):
+				if functions.var_curr_scope_exists(p[2].variables[i]):
 					print("ERROR : Redeclaration")
-				else:
-					st.make_var_entry(p[2].variables[i],p[1].type)
+			else:
+				functions.make_var_entry(p[2].variables[i],p[1].type)
 		p[0].type=p[1].type
 	p[0].name = 'declaration'
 
@@ -1051,6 +1052,7 @@ def p_parameter_type_list(p):
 		p[0] = Node("parameter_type_list", p[1],  p[3])
 	else:
 		p[0] = p[1]
+		functions.add_function_params(p[1].variables,p[1].types_of_var)
 	p[0].name = 'parameter_type_list'
 
 def p_parameter_list(p):
