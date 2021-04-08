@@ -61,8 +61,8 @@ def p_id(p):
 	if x==None:
 		p[0].type = 'EMPTY'
 		p[0].size = 0
-		'''if st.checkscope()!=0
-			messages.add(f'Error at line {p.lineno(1)} : Variable not declared')'''
+		if st.checkscope()!=0:
+			messages.add(f'Error at line {p.lineno(1)} : Variable not declared')
 	else:
 		p[0].type = x['type']
 		if p[0].type[:8]=='pointer_':
@@ -129,8 +129,13 @@ def p_postfix_expression(p):
 		p[0] = Node("postfix_expression", [p[3]], p[1])
 	elif p[2]=='++':
 		p[0] = Node("postfix_expression", [p[1]], p[2])#7
-		p[0].type = p[1].type
-		p[0].size = p[1].size
+		if(p[1].type == 'INT' or p[1].type == 'FLOAT' or p[1].type == 'CHAR' or p[1].type == 'BOOL'):
+			p[0].type = 'INT'
+			p[0].size = 4
+		else:
+			p[0].type = 'TYPE_ERROR'
+			p[0].size = 0
+			messages.add(f'Error at line {p.lineno(2)} : Cannot use operator {str(p[2])} with type {str(p[1].type)}')
 	elif p[2]=='--':
 		p[0] = Node("postfix_expression", [p[1]], p[2])#8
 		if(p[1].type == 'INT' or p[1].type == 'FLOAT' or p[1].type == 'CHAR' or p[1].type == 'BOOL'):
@@ -576,7 +581,7 @@ def p_assignment_expression(p):
 		p[0].size = p[1].size
 	else:
 		p[0] = Node("assignment_expression", [p[1],p[3]], p[2])
-		if(p[1].type != p[3].type):
+		if(p[1].type != p[3].type and p[1].type != 'EMPTY'):
 			messages.add(f'Warning at line {p.lineno(2)} : Casting from {p[3].type} to {p[1].type} ', "warning")
 		p[0].type = p[1].type
 		p[3].type = p[1].type
