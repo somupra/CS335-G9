@@ -656,8 +656,6 @@ def p_init_declarator_list(p):
 		p[0].types_of_var+=p[3].types_of_var
 	else:
 		p[0] = p[1]
-		p[0].variables+=p[1].variables
-		p[0].types_of_var+=p[1].types_of_var
 	p[0].name = 'init_declarator_list'	
 
 def p_init_declarator(p):
