@@ -15,7 +15,7 @@ class SymbolTable:
         self.structures = {}
         # struct name : SymbolTableindex
         self.functions = {}
-        # Function name : (SymbolTableindex,no.of args)
+        # Function name : (SymbolTableindex,no.of args,return_type)
         self.ret_type = None # In case the symbol table is that of a function, we can store its return type.
         self.num_args = 0 #NUmber of args info for a function
 
@@ -44,10 +44,10 @@ def endscope():
 
 
 # Make the entries of function in parent and arguments iof func in func table
-def make_func_entry(names,types):
+def make_func_entry(names,types,ret_type):
     #print("TABLE JUST MADE", table_just_made)
     parent_idx = symtabtrack[-1] # Last index is the parent of this new one
-    allsymboltables[parent_idx].functions[names[0]] = [table_just_made, len(names)-1]# Changing the type of variable to function
+    allsymboltables[parent_idx].functions[names[0]] = [table_just_made, len(names)-1,ret_type]# Changing the type of variable to function
     for i in range(1,len(names)):
         allsymboltables[table_just_made].variables[names[i]] = {} # Changing the type of variable to function
         allsymboltables[table_just_made].variables[names[i]]["type"]=types[i]
@@ -75,6 +75,28 @@ def check_in_var(name):
             break
         curr_table = allsymboltables[curr_table.parent_idx]
     return None # Not found
+
+def var_curr_scope_exists(name):
+    curr_table = allsymboltables[symtabtrack[-1]]
+    if curr_table.variables.get(name)!=None:
+        return True#Name already exists
+    else:
+        return False#Name doesnt exist
+
+def func_exists(name):
+    curr_table = allsymboltables[0]# Will always be global scope
+    if curr_table.functions.get(name)!=None:
+        return True#Name already exists
+    else:
+        return False#Name doesnt exist 
+
+def struct_union_exists(name):
+    curr_table = allsymboltables[symtabtrack[-1]]
+    if curr_table.structures.get(name)!=None:
+        return True#Name already exists
+    else:
+        return False#Name doesnt exist
+
 
 
 def check_in_fs(name):
