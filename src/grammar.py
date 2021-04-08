@@ -13,6 +13,8 @@ class Node:
 		self.leaf = leaf
 		self.type = typex
 		self.size = typex 
+		self.const = 0# compile time constant
+		self.class_type = 'local' #Will be changed acc.
 		self.variables = []
 		self.types_of_var = []
 
@@ -59,7 +61,10 @@ def p_id(p):
 		print("UNDECLARED VARIABLE ERROR")
 	else:
 		p[0].type = x['type']
-		p[0].size = size[p[0].type]
+		if p[0].type[:8]=='pointer_':
+			p[0].size=8
+		else:
+			p[0].size = size[p[0].type]
 
 def p_char_const(p):
 	'''
@@ -188,12 +193,17 @@ def p_unary_expression(p):
 		#p[0].other['UNSIGNED'] = 1
 	else:
 		p[0] = Node("unary_expression", [p[2]], p[1])
+		#Pointer referencing and dereferencing
+		if p[2].type[0:8]=='pointer_' and p[1].name=='unaryop_deref':
+			p[0].type=p[2].type[8:]
+		elif p[1].name=='unaryop_ref':
+			p[0].type='pointer_'+p[2].type
+			print(p[0].type)
 		if(p[2].type == 'STRING'):
 			p[0].type = 'TYPE_ERROR'
 			print('TYPE_ERROR')
 			p[0].size = 4
 		else :
-			p[0].type = p[2].type
 			p[0].size = p[2].size
 	p[0].name = 'unary_expression'
         
@@ -208,6 +218,10 @@ def p_unary_operator(p):
 	'''
 	p[0] = Node("unary_operator", None, p[1])
 	p[0].name = 'unary_operator'
+	if p[1]=='&':
+		p[0].name='unaryop_ref'
+	elif p[1]=='*':
+		p[0].name='unaryop_deref'
 #done
 	
 def p_cast_expression(p):
@@ -590,12 +604,21 @@ def p_declaration(p):
 	else:
 		p[0] = Node("declaration", [p[1],p[2]], None)
 		for i in range(0,len(p[2].variables)):
-			# int x;
 			if p[2].types_of_var[i] == 'EMPTY':
 				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
 				functions.make_var_entry(p[2].variables[i],p[1].type)
 				p[2].types_of_var[i] = p[1].type
-			# int x = 5;
+			elif p[2].types_of_var[i][0:8]=='pointer_':
+				#Pointer of unknown type
+				if p[2].types_of_var[i][-8:]=='pointer_':
+					functions.make_var_entry(p[2].variables[i],p[2].types_of_var[i]+p[1].type)
+					p[2].types_of_var[i]=p[2].types_of_var[i]+p[1].type
+				elif p[2].types_of_var[i][-len(p[1].type):]==p[1].type:#Pointer type matched
+					functions.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
+				else:
+					print(p[2].variables[i],p[2].types_of_var[i])
+					print("TYPE ERROR IN POINTER DECLARATION")
+
 			elif p[1].type!=p[2].types_of_var[i]:
 				print("TYPE ERROR IN DECLARATION")
 				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
@@ -644,19 +667,24 @@ def p_init_declarator(p):
 	'''
 	if (len(p)==4):
 		p[0] = Node("init_declarator", [p[1],p[3]], p[2])
-		p[1].type = p[3].type
+		# Pointer error eg : int **x=y; y is int*
+		if p[1].type.count('_')!=p[3].type.count('_'):
+			print("POINTER TYPE ERROR",p[1].type,p[3].type)
+		else:
+			p[1].type = p[3].type
 		p[0].type = p[1].type #Inherited
 		# Add the actual type of ID 
-		functions.make_var_entry(p[1].variables[0],p[3].type)
-		p[1].types_of_var[0] = p[3].type
+		functions.make_var_entry(p[1].variables[0],p[0].type)
+		p[1].types_of_var[0] = p[0].type
 		p[0].variables.append(p[1].variables[0])
 		p[0].types_of_var.append(p[1].types_of_var[0])
 	else:
 		p[0] = p[1]
-		p[1].type='EMPTY'
+		if p[1].type[:8]!='pointer_':
+			p[1].type='EMPTY'
 		p[0].type=p[1].type
-		p[0].variables.append(p[1].variables[0])
-		p[0].types_of_var.append(p[1].types_of_var[0])
+		#p[0].variables.append(p[1].variables[0])
+		#p[0].types_of_var.append(p[1].types_of_var[0])
 	p[0].name = 'init_declarator'
 
 def p_storage_class_specifier(p):
@@ -831,7 +859,7 @@ def p_type_qualifier(p):
 				   | VOLATILE
 	'''
 	p[0] = Node('type_qualifier')
-	p[0].name = 'type_qualifier'
+	p[0].name = p[1]
 	#if(p[1] == 'CONST'):
             #p[0].other['CONSTANT'] = 1
 #done
@@ -843,6 +871,9 @@ def p_declarator(p):
 	'''
 	if (len(p)==3):
 		p[0] = Node("declarator", [p[1],p[2]], None)
+		p[0].type = p[1].type
+		p[0].variables=p[2].variables
+		p[0].types_of_var.append(p[0].type)
 	else:
 		p[0] = p[1]
 	p[0].name = 'declarator'
@@ -886,8 +917,11 @@ def p_pointer(p):
 	'''
 	if (len(p)==2):
 		p[0] = Node("pointer", None, p[1])
+		p[0].type='pointer_'
 	elif (len(p)==3):
 		p[0] = Node("pointer", [p[2]], p[1])
+		if p[2].type[:8]=='pointer_':
+			p[0].type=p[2].type+'pointer_'
 	else:
 		p[0] = Node("pointer", [p[2],p[3]], p[1])
 	p[0].name = 'pointer'
@@ -1069,6 +1103,7 @@ def p_labeled_statement(p):
 			p[0].type = p[3].type
 		else:
 			p[0] = Node('labeled-stmt-normal', [p[1], p[3]])
+			functions.add_label(p[1],p.lineno(1))
 			p[0].type = p[3].type
 
 	elif len(p) == 5:
@@ -1224,8 +1259,11 @@ def p_jump_statement(p):
 				   | RETURN expression SEMICOLON
 	'''
 	if len(p) == 4:
-		if p[1] == 'goto': p[0] = Node('goto', p[2], "goto") #CHECKK
-		else: p[0] = Node('return', [p[2]], "return");
+		if p[1] == 'goto':
+			p[0] = Node('goto', p[2], "goto") #CHECKK
+			functions.add_goto_ref(p[2],p.lineno(2))
+		else:
+			p[0] = Node('return', [p[2]], "return");
 	else:
 		if p[1] == 'continue': p[0] = Node('continue', None, 'continue')
 		if p[1] == 'break': p[0] = Node('break', None, 'break')
