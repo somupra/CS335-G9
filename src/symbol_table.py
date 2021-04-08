@@ -99,9 +99,7 @@ def var_curr_scope_exists(name):
         return False#Name doesnt exist
 
 def func_exists(name):
-    print(name)
     curr_table = allsymboltables[0]# Will always be global scope
-    print("\n\n",curr_table.functions)
     if curr_table.functions.get(name)!=None:
         return True#Name already exists
     else:
