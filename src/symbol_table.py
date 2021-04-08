@@ -39,7 +39,8 @@ def endscope():
     global table_just_made
     table_just_made = symtabtrack[-1]
     symtabtrack.pop()
-
+def checkscope():
+    return symtabtrack[-1]
 
 # Make the entries of function in parent and arguments iof func in func table
 def make_func_entry(names,types,ret_type):
