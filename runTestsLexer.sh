@@ -2,7 +2,7 @@
 
 test () {
 	printf "\n\nLEXER TEST $1 RESULTS \n"
-	python ./src/lexer.py tests/lexer/test$1.c 
+	python ./src/main.py tests/lexer/test$1.c 
 }
 
 # tests

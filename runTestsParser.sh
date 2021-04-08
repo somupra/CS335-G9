@@ -2,7 +2,7 @@
 
 test () {
 	printf "\n\nPARSER TEST $1 RESULTS \n"
-	python ./src/parser.py tests/parser/test$1.c 
+	python ./src/main.py tests/parser/test$1.c 
 }
 
 # tests
