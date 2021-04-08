@@ -794,7 +794,10 @@ def p_struct_or_union_specifier(p):
 		p[0] = Node("struct_or_union_specifier", [p[1],p[3]], None)
 	else:
 		p[0] = Node("struct_or_union_specifier", [p[1],p[2],p[4]], 'struct/union')
-		st.make_struct_entry(p[2])
+		if functions.struct_union_exists(p[2]):
+			print("ERROR : Structure/Union Redeclaration")
+		else:
+			functions.make_struct_entry(p[2])
 	p[0].name = 'struct_or_union_specifier'
 
 def p_struct_or_union(p):
