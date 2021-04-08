@@ -648,7 +648,7 @@ def p_declaration(p):
 		p[0] = Node("declaration", [p[1],p[2]], None)
 		for i in range(0,len(p[2].variables)):
 			if p[2].types_of_var[i] == 'EMPTY':
-				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
+				#print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
 				if st.var_curr_scope_exists(p[2].variables[i]):
 					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 				else:
@@ -670,7 +670,7 @@ def p_declaration(p):
 					else:
 						st.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
 				else:
-					print(p[2].variables[i],p[2].types_of_var[i])
+					#print(p[2].variables[i],p[2].types_of_var[i])
 					messages.add(f'Error at line {p.lineno(2)}: TYPE ERROR IN POINTER DECLARATION')
 
 			elif isinstance(p[2].types_of_var[i] , list):# Array
@@ -682,7 +682,7 @@ def p_declaration(p):
 
 			elif p[1].type!=p[2].types_of_var[i]:
 				messages.add(f'Error at line {p.lineno(2)}: TYPE ERROR IN DECLARATION')
-				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
+				#print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
 				if st.var_curr_scope_exists(p[2].variables[i]):
 					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 			else:
@@ -743,7 +743,7 @@ def p_init_declarator(p):
 			else:
 				p[1].type = p[1].type+p[3].type[2]# pointer_INT eg.
 		elif p[1].type.count('_')>0 and p[1].type.count('_')!=p[3].type.count('_'):
-			print("POINTER TYPE ERROR",p[1].type,p[3].type)
+			messages.add(f'Error at line {p.lineno(1)}: POINTER TYPE ERROR {p[1].type} {p[3].type}')
 		else:
 			p[1].type = p[3].type
 		p[0].type = p[1].type #Inherited

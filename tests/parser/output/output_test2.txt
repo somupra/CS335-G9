@@ -1,3 +1,5 @@
 TABLE NUMBER ,CHILDREN ,VARS ,FUNCS ,STRUCTS ,LABELS
 0 ,[1] ,,main [1, 1, 'INT'] ,,
 
+0 ,[1] ,,main [1, 1, 'INT'] ,,
+
