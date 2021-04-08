@@ -605,25 +605,30 @@ def p_declaration(p):
 		p[0] = Node("declaration", [p[1],p[2]], None)
 		for i in range(0,len(p[2].variables)):
 			if p[2].types_of_var[i] == 'EMPTY':
-				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
-				st.make_var_entry(p[2].variables[i],p[1].type)
+				functions.make_var_entry(p[2].variables[i],p[1].type)
 				p[2].types_of_var[i] = p[1].type
+
 			elif p[2].types_of_var[i][0:8]=='pointer_':
 				#Pointer of unknown type
 				if p[2].types_of_var[i][-8:]=='pointer_':
-					st.make_var_entry(p[2].variables[i],p[2].types_of_var[i]+p[1].type)
+					functions.make_var_entry(p[2].variables[i],p[2].types_of_var[i]+p[1].type)
 					p[2].types_of_var[i]=p[2].types_of_var[i]+p[1].type
 				elif p[2].types_of_var[i][-len(p[1].type):]==p[1].type:#Pointer type matched
-					st.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
+					functions.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
 				else:
 					print(p[2].variables[i],p[2].types_of_var[i])
 					print("TYPE ERROR IN POINTER DECLARATION")
+
+			elif isinstance(p[2].types_of_var[i] , list):# Array
+				p[2].types_of_var[i].append(p[1].type)
+				functions.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
 
 			elif p[1].type!=p[2].types_of_var[i]:
 				print("TYPE ERROR IN DECLARATION")
 				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
 		p[0].type=p[1].type
 	p[0].name = 'declaration'
+
 
 def p_declaration_specifiers(p):
 	'''
@@ -654,6 +659,8 @@ def p_init_declarator_list(p):
 		p[0].types_of_var=p[1].types_of_var
 		p[0].variables+=p[3].variables
 		p[0].types_of_var+=p[3].types_of_var
+		if p[1].type!=p[3].type:
+			print("ERROR : Type mismatch in declarator list")
 	else:
 		p[0] = p[1]
 	p[0].name = 'init_declarator_list'	
@@ -666,23 +673,25 @@ def p_init_declarator(p):
 	if (len(p)==4):
 		p[0] = Node("init_declarator", [p[1],p[3]], p[2])
 		# Pointer error eg : int **x=y; y is int*
-		if p[1].type.count('_')!=p[3].type.count('_'):
+		if isinstance(p[1].type,list):
+			if  p[1].type[-1]!=int(p[3].name[-1]):
+				print("ERROR : Array declaration dimension not matched")
+		elif p[1].type.count('_')!=p[3].type.count('_'):
 			print("POINTER TYPE ERROR",p[1].type,p[3].type)
 		else:
 			p[1].type = p[3].type
 		p[0].type = p[1].type #Inherited
 		# Add the actual type of ID 
-		st.make_var_entry(p[1].variables[0],p[0].type)
+		functions.make_var_entry(p[1].variables[0],p[0].type)
 		p[1].types_of_var[0] = p[0].type
 		p[0].variables.append(p[1].variables[0])
 		p[0].types_of_var.append(p[1].types_of_var[0])
 	else:
 		p[0] = p[1]
-		if p[1].type[:8]!='pointer_':
+		if isinstance(p[1].type,list)!=True and p[1].type[:8]!='pointer_' :#NOt pointer and not array
 			p[1].type='EMPTY'
 		p[0].type=p[1].type
-		#p[0].variables.append(p[1].variables[0])
-		#p[0].types_of_var.append(p[1].types_of_var[0])
+		
 	p[0].name = 'init_declarator'
 
 def p_storage_class_specifier(p):
@@ -895,6 +904,14 @@ def p_direct_declarator(p):
 		p[0] = p[2]
 	elif (len(p)==4):
 		p[0] = p[1]
+		if p[2]=='[':#Array, unknown length
+			if isinstance(p[1].type,list): #Already an array, dimension increasing
+				p[0].type = p[1].type
+				p[0].type[-1]+=1
+			else:
+				p[0].type = ['array',1]
+			print("ERROR : size unknown")
+			p[0].types_of_var[-1]=p[0].type
 	elif (len(p)==5):
 		p[0] = Node("direct_declarator", [p[3]], p[1]) #CHECKK Direct decl made leaf so that param_type_list, id_list can attatch to that node
 		if p[2]=='(': # Making function variable entry
@@ -903,6 +920,17 @@ def p_direct_declarator(p):
 			p[0].types_of_var=p[1].types_of_var
 			p[0].variables+=p[3].variables
 			p[0].types_of_var+=p[3].types_of_var
+		elif p[2]=='[':
+			if p[3].type!='INT' and p[3].type!='FLOAT' and p[3].type!='CHAR':
+				print("ERROR : Array index not integer")
+			if isinstance(p[1].type,list): #Already an array, dimension increasing
+				p[0].type = p[1].type
+				p[0].type[-1]+=1
+			else:
+				p[0].type = ['array',1]
+			p[0].variables=p[1].variables
+			p[0].types_of_var.append(p[0].type)
+
 	p[0].name = 'direct_declarator'
 		
 
@@ -1058,11 +1086,15 @@ def p_initializer(p):
 	elif len(p)==4:
 		p[0] = p[2]
 		p[0].type = p[2].type
+		if p[2].name.find('curly')!=-1:
+			p[0].name=p[2].name[:-1]+str(int(p[2].name[-1])+1)
+		else:
+			p[0].name = 'initializer_curly_brace_1'
 	else:
 		p[0] = p[1]
 		p[0].type = p[1].type
-	p[0].name = 'initializer'
-
+		p[0].name = 'initializer'
+		
 def p_initializer_list(p):
 	'''
 	initializer_list : initializer
@@ -1071,10 +1103,17 @@ def p_initializer_list(p):
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
+		if p[1].name.find('curly')==-1:
+			p[0].name = 'initializer_list'
 	else:
 		p[0] = Node('initializer_list',[p[1],p[3]],None)
+		p[0].name = p[1].name
 		p[0].type = p[1].type
-	p[0].name = 'initializer_list'
+		if p[1].name.find('curly')!=-1 or p[3].name.find('curly')!=-1:#Dimension Type checking for array initializers
+			if p[1].name!=p[3].name:
+				print("ERROR : Dimension of elements in initializer list not matched")
+		if p[1].type!=p[3].type:
+			print("TYPE ERROR : List elements type not consistent")
 
 def p_statement(p):
 	'''
