@@ -789,7 +789,9 @@ def p_struct_or_union_specifier(p):
 							  | struct_or_union ID
 	'''
 	if len(p)==3:
-		p[0] = Node("struct_or_union_specifier", [p[1]], p[2])
+		p[0] = Node("struct_or_union", [p[1]], p[2])
+		if functions.check_in_structures(p[2])==False:
+			print("ERROR: UNDECLARED structure/union")
 	elif len(p)==5:
 		p[0] = Node("struct_or_union_specifier", [p[1],p[3]], None)
 	else:
