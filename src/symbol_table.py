@@ -62,6 +62,14 @@ def make_func_entry(names,types,ret_type):
     for i in range(1,len(names)):
         allsymboltables[table_just_made].variables[names[i]] = {} # Changing the type of variable to function
         allsymboltables[table_just_made].variables[names[i]]["type"]=types[i]
+        if types[i]=='INT':
+            allsymboltables[table_just_made].variables[names[i]]["size"]=4
+        if types[i]=='FLOAT':
+            allsymboltables[table_just_made].variables[names[i]]["size"]=4
+        if types[i]=='CHAR':
+            allsymboltables[table_just_made].variables[names[i]]["size"]=1
+        if types[i][:8]=='pointer_':
+            allsymboltables[table_just_made].variables[names[i]]["size"]=4
     global goto_ref
     global curr_scope_labels
     for i in goto_ref:
@@ -145,6 +153,14 @@ def check_in_structures(name):
 def make_var_entry(name,type):
     allsymboltables[symtabtrack[-1]].variables[name]={}
     allsymboltables[symtabtrack[-1]].variables[name]["type"]=type
+    if type=='INT':
+        allsymboltables[symtabtrack[-1]].variables[name]["size"]=4
+    if type=='CHAR':
+        allsymboltables[symtabtrack[-1]].variables[name]["size"]=1
+    if type=='FLOAT':
+        allsymboltables[symtabtrack[-1]].variables[name]["size"]=4
+    if type[:8]=='pointer_':
+        allsymboltables[symtabtrack[-1]].variables[name]["size"]=8
 
 
 #Check for redeclaration error of labels here
