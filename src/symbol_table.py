@@ -1,3 +1,7 @@
+import sys 
+import io
+import os
+import csv
 
 allsymboltables = []
 symtabtrack = []
@@ -186,11 +190,51 @@ def print_out (node_idx, level):
     for x in allsymboltables[node_idx].child_idx:
         print_out(x, level+1)
 
-def give_out():
+def print_to_csv(i,filename):
+    old_stdout = sys.stdout
+    new_stdout = io.StringIO()
+    sys.stdout = new_stdout
+    
+    print(i,',',end='') #TABLE NUMBER
+    print(allsymboltables[i].child_idx,',',end='') #CHILDREN
+    #VARS
+    for x in allsymboltables[i].variables:
+        print(x,allsymboltables[i].variables[x],end=' ')
+    print(',',end='')
+    #FUNCS
+    for x in allsymboltables[i].functions:
+        print(x,allsymboltables[i].functions[x],end=' ')
+    print(',',end='')
+    #STRUCTS 
+    for x in allsymboltables[i].structures:
+        print(x,allsymboltables[i].structures[x],end=' ')
+    print(',',end='')
+    #LABELS
+    for x in allsymboltables[i].labels:
+        print(x,end=' ')
+    print('\n')
+    
+    output = new_stdout.getvalue()
+    sys.stdout = old_stdout
+
+    if os.path.isfile(filename):
+        with open(filename,'a',newline='') as file:
+            file.write(output)
+    else:
+        with open(filename, 'w', newline='') as file:
+            fieldnames = ['TABLE NUMBER ', 'CHILDREN ', 'VARS ', 'FUNCS ', 'STRUCTS ', 'LABELS']
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            file.write(output)
+
+def give_out(filename):
     important = "\x1b[36m"
     bold = "\033[1m"
     reset = "\x1B[0m"
     success = "\x1b[32m"
     print(f"\n\n{bold}{important} SYMBOL TABLE {reset}\n\n")
     print_out(0, 0)
+
+    op_filename = "output_"+filename[:-2]+".txt"
+    print_to_csv(0, op_filename)
 

@@ -11,6 +11,9 @@ def main():
 
 	# Run a preprocessor
 	import sys
+ 
+	filename = sys.argv[1]
+
 	with open(sys.argv[1]) as f:
 		input = f.read()
 
@@ -27,7 +30,7 @@ def main():
 		dfs(child,0,graph)
 	graph.write_raw('output_raw.dot')
 	# I'm passing the parent to the dfs function call.
-	st.give_out()
+	st.give_out(filename)
 
 if __name__ == "__main__":
 	main()
