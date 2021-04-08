@@ -22,7 +22,7 @@ def main():
 	if not messages.ok:
 		return
 
-	bfs(obj)
+	# bfs(obj)
 	#print(obj)
 	graph = pydot.Dot('my_graph', graph_type='graph', bgcolor='yellow')
 	graph.add_node(pydot.Node(0,label = obj.type, shape='circle'))

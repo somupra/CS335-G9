@@ -3,3 +3,7 @@ TABLE NUMBER ,CHILDREN ,VARS ,FUNCS ,STRUCTS ,LABELS
 
 0 ,[1, 2, 3] ,,area [1, 2, 'INT'] perimeter [2, 2, 'INT'] main [3, 0, 'INT'] ,,
 
+0 ,[1, 2, 3] ,,area [1, 2, 'INT'] perimeter [2, 2, 'INT'] main [3, 0, 'INT'] ,,
+
+0 ,[1, 2, 3] ,,area [1, 2, 'INT'] perimeter [2, 2, 'INT'] main [3, 0, 'INT'] ,,
+
