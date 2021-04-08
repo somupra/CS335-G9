@@ -686,10 +686,10 @@ def p_declaration(p):
 			elif p[1].type!=p[2].types_of_var[i]:
 				print("TYPE ERROR IN DECLARATION")
 				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
-				if functions.var_curr_scope_exists(p[2].variables[i]):
+				if st.var_curr_scope_exists(p[2].variables[i]):
 					print("ERROR : Redeclaration")
 			else:
-				functions.make_var_entry(p[2].variables[i],p[1].type)
+				st.make_var_entry(p[2].variables[i],p[1].type)
 		p[0].type=p[1].type
 	p[0].name = 'declaration'
 
@@ -1055,7 +1055,7 @@ def p_parameter_type_list(p):
 		p[0] = Node("parameter_type_list", p[1],  p[3])
 	else:
 		p[0] = p[1]
-		functions.add_function_params(p[1].variables,p[1].types_of_var)
+		st.add_function_params(p[1].variables,p[1].types_of_var)
 	p[0].name = 'parameter_type_list'
 
 def p_parameter_list(p):
