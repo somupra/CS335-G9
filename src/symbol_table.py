@@ -16,8 +16,6 @@ class SymbolTable:
         # struct name : SymbolTableindex
         self.functions = {}
         # Function name : (SymbolTableindex,no.of args,return_type)
-        self.ret_type = None # In case the symbol table is that of a function, we can store its return type.
-        self.num_args = 0 #NUmber of args info for a function
 
 
 # 0 is the index of global symbol table
@@ -41,7 +39,8 @@ def endscope():
     global table_just_made
     table_just_made = symtabtrack[-1]
     symtabtrack.pop()
-
+def checkscope():
+    return symtabtrack[-1]
 
 # Make the entries of function in parent and arguments iof func in func table
 def make_func_entry(names,types,ret_type):
