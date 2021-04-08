@@ -3,6 +3,7 @@ allsymboltables = []
 symtabtrack = []
 curr_scope_labels = {}
 goto_ref = {}
+func_params = {}
 
 class SymbolTable:
     def __init__(self, parent):
@@ -20,6 +21,14 @@ class SymbolTable:
 
 # 0 is the index of global symbol table
 table_just_made = 0
+def checkscope():
+    return symtabtrack[-1]
+
+
+def add_function_params(names,types):
+    for i in range(0,len(names)):
+        func_params[names[i]]=types[i]
+
 def newscope():
     if (len(allsymboltables)==0):
         globalsymtab = SymbolTable(None)
@@ -39,8 +48,7 @@ def endscope():
     global table_just_made
     table_just_made = symtabtrack[-1]
     symtabtrack.pop()
-def checkscope():
-    return symtabtrack[-1]
+
 
 # Make the entries of function in parent and arguments iof func in func table
 def make_func_entry(names,types,ret_type):
@@ -59,6 +67,8 @@ def make_func_entry(names,types,ret_type):
         allsymboltables[table_just_made].labels[i]=curr_scope_labels[i]
     goto_ref = {}
     curr_scope_labels = {}
+    global func_params
+    func_params = {}
 
 def make_struct_entry(name):
     parent_idx = symtabtrack[-1] # Last index is the parent of this new one
@@ -73,6 +83,12 @@ def check_in_var(name):
         if curr_table.parent_idx==None:
             break
         curr_table = allsymboltables[curr_table.parent_idx]
+
+    if func_params.get(name)!=None:
+        return func_params.get(name)
+
+    if allsymboltables[0].functions.get(name)!=None:
+        return allsymboltables[0].functions.get(name)[2]\
     return None # Not found
 
 def var_curr_scope_exists(name):
@@ -83,7 +99,9 @@ def var_curr_scope_exists(name):
         return False#Name doesnt exist
 
 def func_exists(name):
+    print(name)
     curr_table = allsymboltables[0]# Will always be global scope
+    print("\n\n",curr_table.functions)
     if curr_table.functions.get(name)!=None:
         return True#Name already exists
     else:
@@ -99,10 +117,11 @@ def struct_union_exists(name):
 
 
 def check_in_fs(name):
+
     curr_table = allsymboltables[symtabtrack[-1]]
     while(1): # Returning the index of local symtab of the particular func name
         if curr_table.functions.get(name)!=None:
-            return curr_table.functions.get(name[0])
+            return curr_table.functions.get(name)
         if curr_table.structures.get(name)!=None:
             return curr_table.structures.get(name)
         if curr_table.parent_idx==None:
