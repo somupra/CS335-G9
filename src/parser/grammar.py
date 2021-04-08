@@ -67,7 +67,10 @@ def p_id(p):
 		if p[0].type[:8]=='pointer_':
 			p[0].size=8
 		else:
-			p[0].size = size[p[0].type]
+			if isinstance(p[0].type,list):#Pointer initialized to array name
+				p[0].size = 8
+			else:
+				p[0].size = size[p[0].type]
 
 def p_char_const(p):
 	'''
@@ -676,6 +679,11 @@ def p_init_declarator(p):
 		if isinstance(p[1].type,list):
 			if  p[1].type[-1]!=int(p[3].name[-1]):
 				print("ERROR : Array declaration dimension not matched")
+		elif isinstance(p[3].type,list):#pointer initialized to array name
+			if p[1].type.count('_')!=p[3].type[1]:#Dimension of pointer and array not matched
+				print("ERROR : Dimension of pointer and array pointer not matched")
+			else:
+				p[1].type = p[1].type+p[3].type[2]# pointer_INT eg.
 		elif p[1].type.count('_')!=p[3].type.count('_'):
 			print("POINTER TYPE ERROR",p[1].type,p[3].type)
 		else:
