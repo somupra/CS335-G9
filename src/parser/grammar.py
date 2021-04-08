@@ -1,7 +1,7 @@
 import sys
 import ply.yacc as yacc
 from lexer.lexrules import tokens
-import symbol_table as functions
+import symbol_table as st
 from errors.error import messages
 
 class Node:
@@ -57,11 +57,11 @@ def p_id(p):
 	p[0] = Node("ID", None,p[1])
 	p[0].name = 'id'
 	p[0].variables+=p[1]
-	x = functions.check_in_var(p[1])
+	x = st.check_in_var(p[1])
 	if x==None:
 		p[0].type = 'EMPTY'
 		p[0].size = 0
-		'''if functions.checkscope()!=0
+		'''if st.checkscope()!=0
 			messages.add(f'Error at line {p.lineno(1)} : Variable not declared')'''
 	else:
 		p[0].type = x['type']
@@ -1208,7 +1208,7 @@ def p_labeled_statement(p):
 			p[0].type = p[3].type
 		else:
 			p[0] = Node('labeled-stmt-normal', [p[1], p[3]])
-			functions.add_label(p[1],p.lineno(1))
+			st.add_label(p[1],p.lineno(1))
 			p[0].type = p[3].type
 
 	elif len(p) == 5:
@@ -1242,13 +1242,13 @@ def p_ocp(p):
 	'''
 	ocp : OCP
 	'''
-	functions.newscope()
+	st.newscope()
 
 def p_ccp(p):
 	'''
 	ccp : CCP
 	'''
-	functions.endscope()
+	st.endscope()
 
 def p_declaration_list(p):
 	'''
@@ -1361,7 +1361,7 @@ def p_jump_statement(p):
 	if len(p) == 4:
 		if p[1] == 'goto':
 			p[0] = Node('goto', p[2], "goto") #CHECKK
-			functions.add_goto_ref(p[2],p.lineno(2))
+			st.add_goto_ref(p[2],p.lineno(2))
 		else:
 			p[0] = Node('return', [p[2]], "return");
 	else:
