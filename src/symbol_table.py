@@ -88,7 +88,7 @@ def check_in_var(name):
         return func_params.get(name)
 
     if allsymboltables[0].functions.get(name)!=None:
-        return allsymboltables[0].functions.get(name)[2]\
+        return allsymboltables[0].functions.get(name)[2]
     return None # Not found
 
 def var_curr_scope_exists(name):
