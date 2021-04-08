@@ -164,7 +164,7 @@ def p_postfix_expression(p):
 			x = st.check_in_fs(p[1].variables[0])
 			p[0].type = x[2] #Return type of function
 		else:
-			print("ERROR : Funcion does not exist")
+			messages.add(f'Error at line {p.lineno(3)}: Funcion does not exist')
 	elif p[2]=='(':#4
 		#Function call with args
 		p[0] = Node("postfix_expression", [p[3]], p[1])
@@ -173,9 +173,9 @@ def p_postfix_expression(p):
 			p[0].type = x[2] #Return type of function
 			#Checking number of parameters match or not
 			if x[1]!=p[3].numof:
-				print("ERROR : Number of Arguments of function call do not match")
+				messages.add(f'Error at line {p.lineno(2)}: Number of Arguments of function call do not match')
 		else:
-			print("ERROR : Funcion does not exist")
+			messages.add(f'Error at line {p.lineno(2)}: Funcion does not exist')
 	p[0].name = 'postfix_expression'
  		
 def p_argument_expression_list(p):
@@ -237,11 +237,8 @@ def p_unary_expression(p):
 			p[0].type=p[2].type[8:]
 		elif p[1].name=='unaryop_ref':
 			p[0].type='pointer_'+p[2].type
-		elif(p[2].type == 'STRING'):
-			p[0].type = 'TYPE_ERROR'
-			#print("Error at line ", p.lineno(1), ": Cannot use unary operator with type", str(p[2].type))#CASES INSUFFICIENT
-			p[0].size = 4
 		else :
+			p[0].type = p[2].type
 			p[0].size = p[2].size
 	p[0].name = 'unary_expression'
 		
@@ -651,9 +648,9 @@ def p_declaration(p):
 		p[0] = Node("declaration", [p[1],p[2]], None)
 		for i in range(0,len(p[2].variables)):
 			if p[2].types_of_var[i] == 'EMPTY':
-				#print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
+				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
 				if st.var_curr_scope_exists(p[2].variables[i]):
-					print("ERROR : Redeclaration")
+					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 				else:
 					st.make_var_entry(p[2].variables[i],p[1].type)
 				p[2].types_of_var[i] = p[1].type
@@ -662,32 +659,32 @@ def p_declaration(p):
 				#Pointer of unknown type
 				if p[2].types_of_var[i][-8:]=='pointer_':
 					if st.var_curr_scope_exists(p[2].variables[i]):
-						print("ERROR : Redeclaration")
+						messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 					else:
 						st.make_var_entry(p[2].variables[i],p[2].types_of_var[i]+p[1].type)
 					p[2].types_of_var[i]=p[2].types_of_var[i]+p[1].type
 
 				elif p[2].types_of_var[i][-len(p[1].type):]==p[1].type:#Pointer type matched
 					if st.var_curr_scope_exists(p[2].variables[i]):
-						print("ERROR : Redeclaration")
+						messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 					else:
 						st.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
 				else:
-					#print(p[2].variables[i],p[2].types_of_var[i])
-					print("TYPE ERROR IN POINTER DECLARATION")
+					print(p[2].variables[i],p[2].types_of_var[i])
+					messages.add(f'Error at line {p.lineno(2)}: TYPE ERROR IN POINTER DECLARATION')
 
 			elif isinstance(p[2].types_of_var[i] , list):# Array
 				p[2].types_of_var[i].append(p[1].type)
 				if st.var_curr_scope_exists(p[2].variables[i]):
-					print("ERROR : Redeclaration")
+					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 				else:
 					st.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
 
 			elif p[1].type!=p[2].types_of_var[i]:
-				print("TYPE ERROR IN DECLARATION")
-				#print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
+				messages.add(f'Error at line {p.lineno(2)}: TYPE ERROR IN DECLARATION')
+				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
 				if st.var_curr_scope_exists(p[2].variables[i]):
-					print("ERROR : Redeclaration")
+					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 			else:
 				st.make_var_entry(p[2].variables[i],p[1].type)
 		p[0].type=p[1].type
@@ -724,7 +721,7 @@ def p_init_declarator_list(p):
 		p[0].variables+=p[3].variables
 		p[0].types_of_var+=p[3].types_of_var
 		if p[1].type!=p[3].type:
-			print("ERROR : Type mismatch in declarator list")
+			messages.add(f'Error at line {p.lineno(1)}: Type mismatch in declarator list')
 	else:
 		p[0] = p[1]
 	p[0].name = 'init_declarator_list'	
@@ -739,14 +736,14 @@ def p_init_declarator(p):
 		# Pointer error eg : int **x=y; y is int*
 		if isinstance(p[1].type,list):
 			if  p[1].type[-1]!=int(p[3].name[-1]):
-				print("ERROR : Array declaration dimension not matched")
+				messages.add(f'Error at line {p.lineno(1)}: Array declaration dimension not matched')
 		elif isinstance(p[3].type,list):#pointer initialized to array name
 			if p[1].type.count('_')!=p[3].type[1]:#Dimension of pointer and array not matched
-				print("ERROR : Dimension of pointer and array pointer not matched")
+				messages.add(f'Error at line {p.lineno(1)}: Dimension of pointer and array pointer not matched')
 			else:
 				p[1].type = p[1].type+p[3].type[2]# pointer_INT eg.
 		elif p[1].type.count('_')!=p[3].type.count('_'):
-			print("POINTER TYPE ERROR",p[1].type,p[3].type)
+			messages.add(f'Error at line {p.lineno(1)}: POINTER TYPE ERROR {p[1].type} {p[3].type}')
 		else:
 			p[1].type = p[3].type
 		p[0].type = p[1].type #Inherited
@@ -814,13 +811,13 @@ def p_struct_or_union_specifier(p):
 	if len(p)==3:
 		p[0] = Node("struct_or_union", [p[1]], p[2])
 		if st.check_in_structures(p[2])==None:
-			print("ERROR: UNDECLARED structure/union")
+			messages.add(f'Error at line {p.lineno(2)}: UNDECLARED structure/union')
 	elif len(p)==5:
 		p[0] = Node("struct_or_union_specifier", [p[1],p[3]], None)
 	else:
 		p[0] = Node("struct_or_union_specifier", [p[1],p[2],p[4]], 'struct/union')
 		if st.struct_union_exists(p[2]):
-			print("ERROR : Structure/Union Redeclaration")
+			messages.add(f'Error at line {p.lineno(2)}: Structure/Union Redeclaration')
 		else:
 			st.make_struct_entry(p[2])
 	p[0].name = 'struct_or_union_specifier'
@@ -851,7 +848,7 @@ def p_struct_declaration(p):
 	p[0] = Node("struct_declaration", [p[1],p[2]], None)
 	for x in p[2].variables:
 		if st.var_curr_scope_exists(x):
-			print("ERROR : Redeclaration")
+			messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 		else:
 			st.make_var_entry(x,p[1].type)
 	p[0].type=p[1].type
@@ -987,7 +984,7 @@ def p_direct_declarator(p):
 				p[0].type[-1]+=1
 			else:
 				p[0].type = ['array',1]
-			print("ERROR : size unknown")
+			messages.add(f'Error at line {p.lineno(2)}: size unknown')
 			p[0].types_of_var[-1]=p[0].type
 	elif (len(p)==5):
 		p[0] = Node("direct_declarator", [p[3]], p[1]) #CHECKK Direct decl made leaf so that param_type_list, id_list can attatch to that node
@@ -999,7 +996,7 @@ def p_direct_declarator(p):
 			p[0].types_of_var+=p[3].types_of_var
 		elif p[2]=='[':
 			if p[3].type!='INT' and p[3].type!='FLOAT' and p[3].type!='CHAR':
-				print("ERROR : Array index not integer")
+				messages.add(f'Error at line {p.lineno(2)}: Array index not integer')
 			if isinstance(p[1].type,list): #Already an array, dimension increasing
 				p[0].type = p[1].type
 				p[0].type[-1]+=1
@@ -1189,9 +1186,9 @@ def p_initializer_list(p):
 		p[0].type = p[1].type
 		if p[1].name.find('curly')!=-1 or p[3].name.find('curly')!=-1:#Dimension Type checking for array initializers
 			if p[1].name!=p[3].name:
-				print("ERROR : Dimension of elements in initializer list not matched")
+				messages.add(f'Error at line {p.lineno(2)}: Dimension of elements in initializer list not matched')
 		if p[1].type!=p[3].type:
-			print("TYPE ERROR : List elements type not consistent")
+			messages.add(f'Error at line {p.lineno(2)}: List elements type not consistent')
 
 def p_statement(p):
 	'''
@@ -1415,7 +1412,7 @@ def p_function_definition(p):
 		p[0].type = p[1].type
 		# Make all the entries : func name in parent symtab and all args in 
 		if st.func_exists(p[2].variables[0]):
-			print("ERROR : Function Redeclaration")
+			messages.add(f'Error at line {p.lineno(2)}: Function Redeclaration')
 		else:
 			st.make_func_entry(p[2].variables,p[2].types_of_var,p[1].type)
 	elif len(p)==5:
