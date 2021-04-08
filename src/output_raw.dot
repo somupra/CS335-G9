@@ -1,0 +1,24 @@
+graph my_graph {
+bgcolor=yellow;
+0 [label=start_state_1, shape=circle];
+1 [label="struct/union", shape=circle];
+0 -- 1;
+2 [label=area, shape=circle];
+1 -- 2;
+3 [label=l, shape=circle];
+1 -- 3;
+4 [label=b, shape=circle];
+1 -- 4;
+5 [label=main, shape=circle];
+0 -- 5;
+6 [label="{}", shape=circle];
+0 -- 6;
+7 [label=z, shape=circle];
+6 -- 7;
+8 [label=4, shape=circle];
+7 -- 8;
+9 [label=return, shape=circle];
+6 -- 9;
+10 [label=0, shape=circle];
+9 -- 10;
+}

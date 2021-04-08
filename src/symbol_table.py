@@ -137,26 +137,42 @@ def add_goto_ref(name,lineno):
     goto_ref[name]=lineno
 
 
-def print_out(i):
-    print("TABLE NUMBER ",i)
-    print("CHILDREN",allsymboltables[i].child_idx,"\n")
-    print("VARS :")
-    for x in allsymboltables[i].variables:
-        print(x,allsymboltables[i].variables[x])
-    print("FUNCS :")
-    for x in allsymboltables[i].functions:
-        print(x,allsymboltables[i].functions[x])
-    print("STRUCTS :")
-    for x in allsymboltables[i].structures:
-        print(x,allsymboltables[i].structures[x])
-    
-    print("LABELS :")
-    for x in allsymboltables[i].labels:
-        print(x)
-    print("-----------------------------------------")
-    for x in allsymboltables[i].child_idx:
-        print_out(x)
+def print_prefix(level):
+    """Print a prefix level deep for pretty printing."""
+    dash = "\x1B[33m"
+    bold = "\033[1m"
+    reset = "\x1B[0m"
+    for _ in range(level):
+        print("  ", end=" ")
+    print(f"{bold}{dash}| - {reset}", end=" ")
+
+def print_out (node_idx, level):
+    dash = "\x1B[33m"
+    bold = "\033[1m"
+    reset = "\x1B[0m"
+    print_prefix(level)
+    print("TABLE    : ", node_idx)
+    print_prefix(level)
+    print("CHILDREN : ", allsymboltables[node_idx].child_idx)
+    print_prefix(level)
+    print("VARS     : ", allsymboltables[node_idx].variables)
+    print_prefix(level)
+    print("FUNCS    : ", allsymboltables[node_idx].functions)
+    print_prefix(level)
+    print("STRUCTS  : ", allsymboltables[node_idx].structures)
+    print_prefix(level)
+    print("LABELS   : ", allsymboltables[node_idx].labels)
+    print_prefix(level)
+    print(f"{bold}{dash}---------------------------------------------------{reset}")
+
+    for x in allsymboltables[node_idx].child_idx:
+        print_out(x, level+1)
 
 def give_out():
-    print_out(0)
+    important = "\x1b[36m"
+    bold = "\033[1m"
+    reset = "\x1B[0m"
+    success = "\x1b[32m"
+    print(f"\n\n{bold}{important} SYMBOL TABLE {reset}\n\n")
+    print_out(0, 0)
 
