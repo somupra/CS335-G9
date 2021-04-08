@@ -1,12 +1,15 @@
 
 allsymboltables = []
 symtabtrack = []
-
+curr_scope_labels = {}
+goto_ref = {}
 
 class SymbolTable:
     def __init__(self, parent):
         self.parent_idx = parent
         self.child_idx = []
+        self.labels = {}
+        # var_name : line_no
         self.variables = {}
         # var_name : {type : .. lineno : ..}
         self.structures = {}
@@ -48,6 +51,15 @@ def make_func_entry(names,types):
     for i in range(1,len(names)):
         allsymboltables[table_just_made].variables[names[i]] = {} # Changing the type of variable to function
         allsymboltables[table_just_made].variables[names[i]]["type"]=types[i]
+    global goto_ref
+    global curr_scope_labels
+    for i in goto_ref:
+        if curr_scope_labels.get(i)==None:
+            print("LABEL NOT DECLARED")
+    for i in curr_scope_labels:
+        allsymboltables[table_just_made].labels[i]=curr_scope_labels[i]
+    goto_ref = {}
+    curr_scope_labels = {}
 
 def make_struct_entry(name):
     parent_idx = symtabtrack[-1] # Last index is the parent of this new one
@@ -83,6 +95,16 @@ def make_var_entry(name,type):
     allsymboltables[symtabtrack[-1]].variables[name]["type"]=type
 
 
+#Check for redeclaration error of labels here
+def add_label(name,lineno):
+    if(curr_scope_labels.get(name)!=None):
+        print("DUPLICATE LABEL : redeclaration\n")
+    else:
+        curr_scope_labels[name]=lineno
+def add_goto_ref(name,lineno):
+    goto_ref[name]=lineno
+
+
 def print_out(i):
     print("TABLE NUMBER ",i)
     print("CHILDREN",allsymboltables[i].child_idx,"\n")
@@ -95,6 +117,10 @@ def print_out(i):
     print("STRUCTS :")
     for x in allsymboltables[i].structures:
         print(x,allsymboltables[i].structures[x])
+    
+    print("LABELS :")
+    for x in allsymboltables[i].labels:
+        print(x)
     print("-----------------------------------------")
     for x in allsymboltables[i].child_idx:
         print_out(x)
