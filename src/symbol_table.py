@@ -16,8 +16,6 @@ class SymbolTable:
         # struct name : SymbolTableindex
         self.functions = {}
         # Function name : (SymbolTableindex,no.of args,return_type)
-        self.ret_type = None # In case the symbol table is that of a function, we can store its return type.
-        self.num_args = 0 #NUmber of args info for a function
 
 
 # 0 is the index of global symbol table
