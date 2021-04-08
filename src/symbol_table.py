@@ -111,6 +111,16 @@ def check_in_fs(name):
         curr_table = allsymboltables[curr_table.parent_idx]
     return None # Not found
 
+def check_in_structures(name):
+    curr_table = allsymboltables[symtabtrack[-1]]
+    while(1): # Returning the index of local symtab of the particular func name
+        if curr_table.functions.get(name)!=None:
+            return curr_table.structures.get(name[0])
+        if curr_table.parent_idx==None:
+            break
+        curr_table = allsymboltables[curr_table.parent_idx]
+    return None # Not found
+
 
 def make_var_entry(name,type):
     allsymboltables[symtabtrack[-1]].variables[name]={}
