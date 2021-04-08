@@ -58,7 +58,7 @@ def p_id(p):
 	if x==None:
 		p[0].type = 'EMPTY'
 		p[0].size = 0
-		print("UNDECLARED VARIABLE ERROR")
+		print("Error at line ", p.lineno(1), ": Variable not declared")
 	else:
 		p[0].type = x['type']
 		if p[0].type[:8]=='pointer_':
@@ -167,7 +167,7 @@ def p_unary_expression(p):
 		p[0] = Node("unary_expression", [p[2]], p[1])
 		if(p[2].type != 'INT'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[1]), "with type", str(p[2].type))
 			p[0].size = p[2].size
 		else:
 			p[0].type = p[2].type
@@ -176,7 +176,7 @@ def p_unary_expression(p):
 		p[0] = Node("unary_expression", [p[2]], p[1])
 		if(p[2].type != 'INT'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[1]), "with type", str(p[2].type))
 			p[0].size = p[2].size
 		else:
 			p[0].type = p[2].type
@@ -185,12 +185,10 @@ def p_unary_expression(p):
 		p[0] = Node("unary_expression", [p[3]], p[1])
 		p[0].type = 'INT'
 		p[0].size = 4
-		#p[0].other['UNSIGNED'] = 1
 	elif p[1]=='sizeof':
 		p[0] = Node("unary_expression", [p[2]], p[1])
 		p[0].type = 'INT'
 		p[0].size = 4
-		#p[0].other['UNSIGNED'] = 1
 	else:
 		p[0] = Node("unary_expression", [p[2]], p[1])
 		#Pointer referencing and dereferencing
@@ -198,10 +196,9 @@ def p_unary_expression(p):
 			p[0].type=p[2].type[8:]
 		elif p[1].name=='unaryop_ref':
 			p[0].type='pointer_'+p[2].type
-			print(p[0].type)
-		if(p[2].type == 'STRING'):
+		elif(p[2].type == 'STRING'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use unary operator with type", str(p[2].type))
 			p[0].size = 4
 		else :
 			p[0].size = p[2].size
@@ -238,7 +235,7 @@ def p_cast_expression(p):
 		p[0] = p[4]
 		if((p[2].type == 'STRING' and p[4].type != 'STRING') or (p[2].type != 'STRING' and p[4].type == 'STRING')):
 			p[0].type = 'TYPE_ERROR' 
-			print("Typecasting Error")
+			print("Error at line ", p.lineno(1), ": Cannot convert expression of type", str(p[4].type), "to type", str(p[2].type))
 			p[0].size = p[2].size
 		else :
 			p[0].type = p[2].type
@@ -268,11 +265,11 @@ def p_multiplicative_expression(p):
 		p[0] = Node("unary_expression", [p[1],p[3]], p[2])
 		if(p[1].type == 'STRING' or p[3].type == 'STRING'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		elif(p[1].type == 'FLOAT' or p[3].type == 'FLOAT'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		else:
 			p[0].type = 'INT'
@@ -285,7 +282,7 @@ def p_multiplicative_expression(p):
 		p[0] = Node("unary_expression", [p[1],p[3]], p[2])
 		if(p[1].type == 'STRING' or p[3].type == 'STRING'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		elif(p[1].type == 'FLOAT' or p[3].type == 'FLOAT'):
 			p[0].type = 'FLOAT'
@@ -317,7 +314,7 @@ def p_additive_expression(p):
 		p[0] = Node("additive_expression", [p[1],p[3]], p[2])
 		if(p[1].type == 'STRING' or p[3].type == 'STRING'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		elif(p[1].type == 'FLOAT' or p[3].type == 'FLOAT'):
 			p[0].type = 'FLOAT'
@@ -349,11 +346,11 @@ def p_shift_expression(p):
 		p[0] = Node("shift_expression", [p[1],p[3]], p[2])
 		if(p[1].type == 'STRING' or p[3].type == 'STRING'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		elif(p[1].type == 'FLOAT' or p[3].type == 'FLOAT'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		else:
 			p[0].type = 'INT'
@@ -380,7 +377,7 @@ def p_relational_expression(p):
 		p[0] = Node("relational_expression", [p[1],p[3]], p[2])
 		if(p[1].type == 'STRING' or p[3].type == 'STRING'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		else : 
 			p[0].type = 'BOOL'
@@ -416,11 +413,11 @@ def p_and_expression(p):
 		p[0] = Node("and_expression", [p[1],p[3]], p[2])
 		if(p[1].type == 'STRING' or p[3].type == 'STRING'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		elif(p[1].type == 'FLOAT' or p[3].type == 'FLOAT'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		else:
 			p[0].type = 'INT'
@@ -444,11 +441,11 @@ def p_exclusive_or_expression(p):
 		p[0] = Node("exclusive_or_expression", [p[1],p[3]], p[2])
 		if(p[1].type == 'STRING' or p[3].type == 'STRING'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		elif(p[1].type == 'FLOAT' or p[3].type == 'FLOAT'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		else:
 			p[0].type = 'INT'
@@ -472,11 +469,11 @@ def p_inclusive_or_expression(p):
 		p[0] = Node("inclusive_or_expression", [p[1],p[3]], p[2])
 		if(p[1].type == 'STRING' or p[3].type == 'STRING'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		elif(p[1].type == 'FLOAT' or p[3].type == 'FLOAT'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ": Cannot use operator", str(p[2].type), "with type", str(p[1].type), "and", str(p[3].type))
 			p[0].size = 4
 		else:
 			p[0].type = 'INT'
@@ -578,7 +575,7 @@ def p_expression(p):
 		p[0] = Node("expression", [p[1],p[3]], None)
 		if(p[1].type != p[3].type):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), ":Type Mismatch")
 			p[0].size = p[1].size
 		else:
 			p[0].type = p[1].type
@@ -1156,7 +1153,7 @@ def p_declaration_list(p):
 	else:
 		p[0] = Node('decl-list', [p[1], p[2]])
 		if (p[1].type == 'TYPE_ERROR' or p[2].type == 'TYPE_ERROR'):
-			p[0].type = 'TYPE_ERROR'
+			print("Error at line ", p.lineno(1), "Undefined statement")
 		else:
 			p[0].type = 'VOID'
 	p[0].name = 'declaration_list'
@@ -1173,7 +1170,7 @@ def p_statement_list(p):
 		p[0] = Node('stmt-list', [p[1], p[2]])
 		if (p[1].type == 'TYPE_ERROR' or p[2].type == 'TYPE_ERROR'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), "Undefined statement")
 		else:
 			p[0].type = 'VOID'
 	p[0].name = 'statement_list'
@@ -1187,7 +1184,7 @@ def p_expression_statement(p):
 		p[0] = Node('expr-stmt', [p[1]], None)
 		if(p[1].type == 'TYPE_ERROR'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(2), "Undefined statement")
 		else : 
 			p[0].type = 'VOID'
 	else:
@@ -1213,7 +1210,7 @@ def p_selection_statement(p):
 		p[0] = Node('if-then-else', [p[3], p[5], p[7]], "if-then-else")
 		if (p[5].type == 'TYPE_ERROR' or p[7].type == 'TYPE_ERROR'):
 			p[0].type = 'TYPE_ERROR'
-			print('TYPE_ERROR')
+			print("Error at line ", p.lineno(1), "Undefined statement")
 		else:
 			p[0].type = 'VOID'
 	p[0].name = 'selection_statement'
@@ -1236,7 +1233,7 @@ def p_iteration_statement(p):
 				p[0].type = p[7].type
 			else:
 				p[0].type = 'TYPE_ERROR'
-				print('TYPE_ERROR')
+				print("Error at line ", p.lineno(1), "Undefined statement")
 		else:
 			p[0] = Node('do-while', [p[2], p[5]], 'do-while')
 			p[0].type = p[2].type
@@ -1247,7 +1244,7 @@ def p_iteration_statement(p):
 			p[0].type = p[6].type
 		else :
                 	p[0].type = 'TYPE_ERROR'
-                	print('TYPE_ERROR')
+                	print("Error at line ", p.lineno(1), "Undefined statement")
 	p[0].name = 'iteration_statement'
 
 def p_jump_statement(p):

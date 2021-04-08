@@ -121,7 +121,7 @@ if __name__ == '__main__':
 	with open(sys.argv[1]) as f:
 		input = f.read()
 
-	obj = parser.parse(input=input, lexer=lexer)
+	obj = parser.parse(input=input, lexer=lexer, tracking=True)
 	bfs(obj)
 	#print(obj)
 	graph = pydot.Dot('my_graph', graph_type='graph', bgcolor='yellow')

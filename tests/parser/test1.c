@@ -6,7 +6,7 @@ struct area{
 
 int main()
 {
-	int x;
-	char y = x;
+	char *x;
+	int y = (int)'a';
 	return 0;
 }
