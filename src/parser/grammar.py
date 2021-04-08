@@ -19,6 +19,7 @@ class Node:
 		self.class_type = 'local' #Will be changed acc.
 		self.variables = []
 		self.types_of_var = []
+		self.numof = 0
 
 start = 'translation_unit'
 
@@ -56,6 +57,7 @@ def p_id(p):
 	'''
 	p[0] = Node("ID", None,p[1])
 	p[0].name = 'id'
+	p[0].variables+=p[1]
 	x = st.check_in_var(p[1])
 	if x==None:
 		p[0].type = 'EMPTY'
@@ -121,6 +123,7 @@ def p_postfix_expression(p):
 	'''
 	if len(p)==2:
 		p[0] = p[1]
+		p[0].variables=p[1].variables
 		p[0].type = p[1].type
 		p[0].size = p[1].size
 	elif p[2]=='[':
@@ -140,11 +143,26 @@ def p_postfix_expression(p):
 		p[0] = Node("postfix_arrow_exp", [p[1]], p[3])#6
 		#p[0].type = table(p[3].type)
 	elif p[3]==')':#3
+		#function call without args
 		p[0] = p[1]
+		if functions.func_exists(p[1].variables[0]):
+			x = functions.check_in_fs(p[1].variables[0])
+			p[0].type = x[2] #Return type of function
+		else:
+			print("ERROR : Funcion does not exist")
 	elif p[2]=='(':#4
+		#Function call with args
 		p[0] = Node("postfix_expression", [p[3]], p[1])
+		if functions.func_exists(p[1].variables[0]):
+			x = functions.check_in_fs(p[1].variables[0])
+			p[0].type = x[2] #Return type of function
+			#Checking number of parameters match or not
+			if x[1]!=p[3].numof:
+				print("ERROR : Number of Arguments of function call do not match")
+		else:
+			print("ERROR : Funcion does not exist")
 	p[0].name = 'postfix_expression'
-		
+ 		
 def p_argument_expression_list(p):
 	'''
 	argument_expression_list : assignment_expression
@@ -152,8 +170,10 @@ def p_argument_expression_list(p):
 	'''
 	if len(p)==2:
 		p[0] = p[1]
+		p[0].numof = 1
 	else:
 		p[0] = Node("arg_expr_list", [p[1],p[3]], None) #CHECKK, Comma not taken in leaf, all members of list connected to same node
+		p[0].numof = p[1].numof + 1
 	p[0].name = 'argument_expression_list'
 
 def p_unary_expression(p):
@@ -608,27 +628,45 @@ def p_declaration(p):
 		p[0] = Node("declaration", [p[1],p[2]], None)
 		for i in range(0,len(p[2].variables)):
 			if p[2].types_of_var[i] == 'EMPTY':
-				functions.make_var_entry(p[2].variables[i],p[1].type)
+				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
+				if functions.var_curr_scope_exists(p[2].variables[i]):
+					print("ERROR : Redeclaration")
+				else:
+					functions.make_var_entry(p[2].variables[i],p[1].type)
 				p[2].types_of_var[i] = p[1].type
 
 			elif p[2].types_of_var[i][0:8]=='pointer_':
 				#Pointer of unknown type
 				if p[2].types_of_var[i][-8:]=='pointer_':
-					functions.make_var_entry(p[2].variables[i],p[2].types_of_var[i]+p[1].type)
+					if functions.var_curr_scope_exists(p[2].variables[i]):
+						print("ERROR : Redeclaration")
+					else:
+						functions.make_var_entry(p[2].variables[i],p[2].types_of_var[i]+p[1].type)
 					p[2].types_of_var[i]=p[2].types_of_var[i]+p[1].type
+
 				elif p[2].types_of_var[i][-len(p[1].type):]==p[1].type:#Pointer type matched
-					functions.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
+					if functions.var_curr_scope_exists(p[2].variables[i]):
+						print("ERROR : Redeclaration")
+					else:
+						functions.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
 				else:
 					print(p[2].variables[i],p[2].types_of_var[i])
 					print("TYPE ERROR IN POINTER DECLARATION")
 
 			elif isinstance(p[2].types_of_var[i] , list):# Array
 				p[2].types_of_var[i].append(p[1].type)
-				functions.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
+				if functions.var_curr_scope_exists(p[2].variables[i]):
+					print("ERROR : Redeclaration")
+				else:
+					functions.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
 
 			elif p[1].type!=p[2].types_of_var[i]:
 				print("TYPE ERROR IN DECLARATION")
 				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
+				if functions.var_curr_scope_exists(p[2].variables[i]):
+					print("ERROR : Redeclaration")
+				else:
+					functions.make_var_entry(p[2].variables[i],p[1].type)
 		p[0].type=p[1].type
 	p[0].name = 'declaration'
 
@@ -690,7 +728,7 @@ def p_init_declarator(p):
 			p[1].type = p[3].type
 		p[0].type = p[1].type #Inherited
 		# Add the actual type of ID 
-		functions.make_var_entry(p[1].variables[0],p[0].type)
+		#functions.make_var_entry(p[1].variables[0],p[0].type)
 		p[1].types_of_var[0] = p[0].type
 		p[0].variables.append(p[1].variables[0])
 		p[0].types_of_var.append(p[1].types_of_var[0])
@@ -784,7 +822,10 @@ def p_struct_declaration(p):
 	'''
 	p[0] = Node("struct_declaration", [p[1],p[2]], None)
 	for x in p[2].variables:
-		st.make_var_entry(x,p[1].type)
+		if functions.var_curr_scope_exists(x):
+			print("ERROR : Redeclaration")
+		else:
+			functions.make_var_entry(x,p[1].type)
 	p[0].type=p[1].type
 	p[0].name = 'struct_declaration'
 
@@ -1351,7 +1392,10 @@ def p_function_definition(p):
 		p[2].type=p[1].type
 		p[0].type = p[1].type
 		# Make all the entries : func name in parent symtab and all args in 
-		st.make_func_entry(p[2].variables,p[2].types_of_var)
+		if functions.func_exists(p[2].variables[0]):
+			print("ERROR : Function Redeclaration")
+		else:
+			functions.make_func_entry(p[2].variables,p[2].types_of_var,p[1].type)
 	elif len(p)==5:
 		print("func_defn_3")
 		p[0] = Node('func_defn_3',[p[1],p[2],p[3],p[4]],None)
