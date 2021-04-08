@@ -61,8 +61,8 @@ def p_id(p):
 	if x==None:
 		p[0].type = 'EMPTY'
 		p[0].size = 0
-		if functions.checkscope()!=0
-			messages.add(f'Error at line {p.lineno(1)} : Variable not declared')
+		'''if functions.checkscope()!=0
+			messages.add(f'Error at line {p.lineno(1)} : Variable not declared')'''
 	else:
 		p[0].type = x['type']
 		if p[0].type[:8]=='pointer_':
@@ -115,8 +115,8 @@ def p_postfix_expression(p):
 						| postfix_expression OSP expression CSP
 						| postfix_expression OP CP
 						| postfix_expression OP argument_expression_list CP
-						| postfix_expression DOT ID
-						| postfix_expression ARROW ID
+						| postfix_expression DOT id
+						| postfix_expression ARROW id
 						| postfix_expression INCREMENT
 						| postfix_expression DECREMENT
 	'''
@@ -133,12 +133,21 @@ def p_postfix_expression(p):
 		p[0].size = p[1].size
 	elif p[2]=='--':
 		p[0] = Node("postfix_expression", [p[1]], p[2])#8
-		p[0].type = p[1].type
-		p[0].size = p[1].size
+		if(p[1].type == 'INT' or p[1].type == 'FLOAT' or p[1].type == 'CHAR' or p[1].type == 'BOOL'):
+			p[0].type = 'INT'
+			p[0].size = 4
+		else:
+			p[0].type = 'TYPE_ERROR'
+			p[0].size = 0
+			messages.add(f'Error at line {p.lineno(2)} : Cannot use operator {str(p[2])} with type {str(p[1].type)}')
 	elif p[2]=='.':
 		p[0] = Node("postfix_dot_exp", [p[1]], p[3])#5
+		p[0].type = p[3].type
+		p[0].size = p[3].size
 	elif p[2]=='->':
 		p[0] = Node("postfix_arrow_exp", [p[1]], p[3])#6
+		p[0].type = p[3].type
+		p[0].size = p[3].size
 	elif p[3]==')':#3
 		#function call without args
 		p[0] = p[1]
