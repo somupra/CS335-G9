@@ -651,7 +651,7 @@ def p_declaration(p):
 		p[0] = Node("declaration", [p[1],p[2]], None)
 		for i in range(0,len(p[2].variables)):
 			if p[2].types_of_var[i] == 'EMPTY':
-				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
+				#print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
 				if st.var_curr_scope_exists(p[2].variables[i]):
 					print("ERROR : Redeclaration")
 				else:
@@ -673,7 +673,7 @@ def p_declaration(p):
 					else:
 						st.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
 				else:
-					print(p[2].variables[i],p[2].types_of_var[i])
+					#print(p[2].variables[i],p[2].types_of_var[i])
 					print("TYPE ERROR IN POINTER DECLARATION")
 
 			elif isinstance(p[2].types_of_var[i] , list):# Array
@@ -685,7 +685,7 @@ def p_declaration(p):
 
 			elif p[1].type!=p[2].types_of_var[i]:
 				print("TYPE ERROR IN DECLARATION")
-				print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
+				#print("---",p[2].variables[i],p[2].types_of_var[i],p[1].type)
 				if st.var_curr_scope_exists(p[2].variables[i]):
 					print("ERROR : Redeclaration")
 			else:
