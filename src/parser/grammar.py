@@ -65,7 +65,10 @@ def p_id(p):
 		if st.checkscope()!=0:
 			messages.add(f'Error at line {p.lineno(1)} : Variable not declared')
 	else:
-		p[0].type = x['type']
+		if isinstance(x,str):
+			p[0].type = x
+		else:
+			p[0].type = x['type']
 		if p[0].type[:8]=='pointer_':
 			p[0].size=8
 		else:
