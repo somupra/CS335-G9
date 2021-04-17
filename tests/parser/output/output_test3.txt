@@ -7,3 +7,59 @@ TABLE NUMBER ,CHILDREN ,VARS ,FUNCS ,STRUCTS ,LABELS
 
 0 ,[1] ,,main [1, 0, 'INT'] ,,
 
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+

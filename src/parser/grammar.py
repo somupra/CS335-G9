@@ -44,11 +44,13 @@ def p_primary_expression(p):
 	  p[0] = p[2]
 	  p[0].type = p[2].type
 	  p[0].size = p[2].size
+	  #p[0].place = p[2].place
 	else:
 		p[0] = Node("primary_expression", [p[1]])
 		p[0].type = p[1].type
 		p[0].variables = p[1].variables
 		p[0].size = p[1].size
+		#p[0].place = p[1].place
 	p[0].name = 'primary_expression'	
 
 def p_id(p):

@@ -9,3 +9,27 @@ TABLE NUMBER ,CHILDREN ,VARS ,FUNCS ,STRUCTS ,LABELS
 
 0 ,[1, 2] ,,main [2, 0, 'INT'] ,area 1 ,
 
+0 ,[1, 2] ,,main [2, 0, 'INT'] ,area 1 ,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,main [2, 0, 'declaration_specifiers'] ,area 1 ,
+
+0 ,[1, 2] ,,main [2, 0, 'INT'] ,area 1 ,
+
+0 ,[1, 2, 3] ,,main [3, 0, 'INT'] ,area 1 area1 2 ,
+
+0 ,[1, 2, 3] ,,main [3, 0, 'INT'] ,area 1 area1 2 ,
+
+0 ,[1, 2, 3] ,,main [3, 0, 'INT'] ,area 1 area1 2 ,
+
