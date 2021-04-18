@@ -44,13 +44,14 @@ def p_primary_expression(p):
 	  p[0] = p[2]
 	  p[0].type = p[2].type
 	  p[0].size = p[2].size
-	  #p[0].place = p[2].place
+	  p[0].place = p[2].place
+	  p[0].truelist = None
 	else:
 		p[0] = Node("primary_expression", [p[1]])
 		p[0].type = p[1].type
 		p[0].variables = p[1].variables
 		p[0].size = p[1].size
-		#p[0].place = p[1].place
+		p[0].place = p[1].place
 	p[0].name = 'primary_expression'	
 
 def p_id(p):
@@ -78,6 +79,7 @@ def p_id(p):
 				p[0].size = 8
 			else:
 				p[0].size = size[p[0].type]
+	p[0].place = symbol_table_find(p[1])
 
 def p_char_const(p):
 	'''
@@ -87,6 +89,8 @@ def p_char_const(p):
 	p[0].name = "char_const"
 	p[0].type = 'CHAR'
 	p[0].size = 1
+	p[0].place = newvar()
+	*p[0].place = p[1]
 	
 def p_string(p):
 	'''
@@ -96,6 +100,8 @@ def p_string(p):
 	p[0].name = "string"
 	p[0].type = "pointer_CHAR"
 	p[0].size = 8
+	p[0].place = newvar()
+	*p[0].place = p[1]
 	
 def p_int(p):
 	'''
@@ -105,6 +111,8 @@ def p_int(p):
 	p[0].name = "int"
 	p[0].type = 'INT'
 	p[0].size = 4
+	p[0].place = newvar()
+	*p[0].place = p[1]
 
 def p_float(p):
 	'''
@@ -114,6 +122,8 @@ def p_float(p):
 	p[0].name = "float"
 	p[0].type = 'FLOAT'
 	p[0].size = 4
+	p[0].place = newvar()
+	*p[0].place = p[1]
 	
 def p_postfix_expression(p):
 	'''
@@ -298,10 +308,12 @@ def p_multiplicative_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
+		p[0].place = p[1].place
 	elif p[1]=='(':
 		p[0] = p[2]
 		p[0].type = p[2].type
 		p[0].size = p[2].size
+		p[0].place = p[2].place
 	elif p[2]=='%':
 		p[0] = Node("unary_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -319,6 +331,8 @@ def p_multiplicative_expression(p):
 			p[0].size = 4
 			p[1].size = 4
 			p[3].size = 4
+			p[0].place = newvar()
+			emit(p[0].place '=' to_int(p[1].place) p[2] to_int(p[3].place))
 	else :
 		p[0] = Node("unary_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -332,6 +346,8 @@ def p_multiplicative_expression(p):
 			p[0].size = 4
 			p[1].size = 4
 			p[3].size = 4
+			p[0].place = newvar()
+			emit(p[0].place '=' to_float(p[1].place) to_float_op(p[2]) to_float(p[3].place))
 		else:
 			p[0].type = 'INT'
 			p[1].type = 'INT'
@@ -339,6 +355,8 @@ def p_multiplicative_expression(p):
 			p[0].size = 4
 			p[1].size = 4
 			p[3].size = 4
+			p[0].place = newvar()
+			emit(p[0].place '=' to_int(p[1].place) to_int_op(p[2]) to_int(p[3].place))
 	p[0].name = 'multiplicative_expression'
 
 def p_additive_expression(p):
@@ -351,6 +369,7 @@ def p_additive_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
+		p[0].place = p[1].place
 	else:
 		p[0] = Node("additive_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -364,6 +383,8 @@ def p_additive_expression(p):
 			p[0].size = 4
 			p[1].size = 4
 			p[3].size = 4
+			p[0].place = newvar()
+			emit(p[0].place '=' to_float(p[1].place) to_float_op(p[2]) to_float(p[3].place))
 		else:
 			p[0].type = 'INT'
 			p[1].type = 'INT'
@@ -371,6 +392,8 @@ def p_additive_expression(p):
 			p[0].size = 4
 			p[1].size = 4
 			p[3].size = 4
+			p[0].place = newvar()
+			emit(p[0].place '=' to_int(p[1].place) to_int_op(p[2]) to_int(p[3].place))
 	p[0].name = 'additive_expression'
 
 def p_shift_expression(p):
@@ -383,6 +406,7 @@ def p_shift_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
+		p[0].place = p[1].place
 	else:
 		p[0] = Node("shift_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -400,6 +424,8 @@ def p_shift_expression(p):
 			p[0].size = 4
 			p[1].size = 4
 			p[3].size = 4
+			p[0].place = newvar()
+			emit(p[0].place '=' to_int(p[1].place) p[2] to_int(p[3].place))
 	p[0].name = 'shift_expression'
 
 def p_relational_expression(p):
@@ -414,6 +440,7 @@ def p_relational_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
+		p[0].place = p[1].place
 	else:
 		p[0] = Node("relational_expression", [p[1],p[3]], p[2])
 		if((p[1].type[0:8] == 'pointer_' and p[3].type[0:8] != 'pointer_') or (p[1].type[0:8] != 'pointer_' and p[3].type[0:8] == 'pointer_')):
@@ -423,6 +450,10 @@ def p_relational_expression(p):
 		else : 
 			p[0].type = 'BOOL'
 			p[0].size = 1
+			p[0].truelist = makelist(nextquad)
+			p[0].falselist = makelist(nextquad+1)
+			emit('if' p[1].place p[2] p[3].place goto '---')
+			emit(goto '---')
 	p[0].name = 'relational_expression'
 
 def p_equality_expression(p):
@@ -435,6 +466,11 @@ def p_equality_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
+		if(p[1].place):
+			p[0].place = p[1].place
+		else:
+			p[0].truelist = p[1].truelist
+			p[0].falselist = p[1].falselist
 	else:
 		p[0] = Node("equality_expression", [p[1],p[3]], p[2])
 		if((p[1].type[0:8] == 'pointer_' and p[3].type[0:8] != 'pointer_') or (p[1].type[0:8] != 'pointer_' and p[3].type[0:8] == 'pointer_')):
@@ -444,6 +480,11 @@ def p_equality_expression(p):
 		else : 
 			p[0].type = 'BOOL'
 			p[0].size = 1
+			p[0].truelist = makelist(nextquad)
+			p[0].falselist = makelist(nextquad+1)
+			emit('if' p[1].place p[2] p[3].place goto '---')
+			emit(goto '---')
+			
 	p[0].name = 'equality_expression'
 
 def p_and_expression(p):
@@ -455,6 +496,8 @@ def p_and_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
+		if(p[1].place):
+			p[0].place = p[1].place
 	else:
 		p[0] = Node("and_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -472,6 +515,8 @@ def p_and_expression(p):
 			p[0].size = 4
 			p[1].size = 4
 			p[3].size = 4
+			p[0].place = newvar()
+			emit(p[0].place '=' to_int(p[1].place) p[2] to_int(p[3].place))
 	p[0].name = 'and_expression'
 	
 def p_exclusive_or_expression(p):
@@ -483,6 +528,8 @@ def p_exclusive_or_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
+		if(p[1].place):
+			p[0].place = p[1].place
 	else:
 		p[0] = Node("exclusive_or_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -500,6 +547,8 @@ def p_exclusive_or_expression(p):
 			p[0].size = 4
 			p[1].size = 4
 			p[3].size = 4
+			p[0].place = newvar()
+			emit(p[0].place '=' to_int(p[1].place) p[2] to_int(p[3].place))
 	p[0].name = 'exclusive_or_expression'
 
 def p_inclusive_or_expression(p):
@@ -511,6 +560,8 @@ def p_inclusive_or_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
+		if(p[1].place):
+			p[0].place = p[1].place
 	else:
 		p[0] = Node("inclusive_or_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -528,36 +579,56 @@ def p_inclusive_or_expression(p):
 			p[0].size = 4
 			p[1].size = 4
 			p[3].size = 4
+			p[0].place = newvar()
+			emit(p[0].place '=' to_int(p[1].place) p[2] to_int(p[3].place))
 	p[0].name = 'inclusive_or_expression'
 
 def p_logical_and_expression(p):
 	'''
 	logical_and_expression : inclusive_or_expression
-						   | logical_and_expression AND inclusive_or_expression
+						   | logical_and_expression AND label_m inclusive_or_expression
 	'''
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
+		if(p[1].place):
+			p[0].place = p[1].place
 	else:
 		p[0] = Node("logical_and_expression", [p[1],p[3]], p[2])
 		p[0].type = 'BOOL'
 		p[0].size = 1
+		backpatch(p[1].truelist, p[3].quad)
+		p[0].truelist = p[4].truelist
+		p[0].falselist = merge(p[1].falselist, p[4].falselist)
 	p[0].name = 'logical_and_expression'
+
+def p_label_m(p):
+	'''
+	label_m : 
+	'''
+	p[0].quad = nextquad
 
 def p_logical_or_expression(p):
 	'''
 	logical_or_expression : logical_and_expression
-						  | logical_or_expression OR logical_and_expression
+						  | logical_or_expression OR label_m logical_and_expression
 	'''
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
+		if(p[1].place):
+			p[0].place = p[1].place
+		p[0].truelist = p[1].truelist
+		p[0].falselist = p[1].falselist
 	else:
 		p[0] = Node("logical_or_expression", [p[1],p[3]], p[2])
 		p[0].type = 'BOOL'
 		p[0].size = 1
+		backpatch(p[1].falselist, p[3].quad)
+		p[0].truelist = merge(p[1].truelist, p[4].truelist)
+		p[0].falselist = p[4].falselist
 	p[0].name = 'logical_or_expression'
 
 def p_conditional_expression(p):
@@ -582,6 +653,7 @@ def p_assignment_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
+		p[0].place = p[1].place
 	else:
 		p[0] = Node("assignment_expression", [p[1],p[3]], p[2])
 		if(p[1].type != p[3].type and p[1].type != 'EMPTY'):
@@ -590,6 +662,7 @@ def p_assignment_expression(p):
 		p[3].type = p[1].type
 		p[0].size = p[1].size
 		p[3].size = p[1].size
+		emit(p[1].place p[2] p[3].place)
 	p[0].name = 'assignment_expression'
 
 def p_assignment_operator(p):
