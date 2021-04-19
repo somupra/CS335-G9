@@ -20,6 +20,8 @@ class Node:
 		self.variables = []
 		self.types_of_var = []
 		self.numof = 0
+		self.offset = 0
+		self.value = 'undefined' #To store constants, for array size, say, a[10]
 
 start = 'translation_unit'
 
@@ -55,6 +57,7 @@ def p_primary_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 	  	p[0].falselist = p[1].falselist
+		p[0].value = p[1].value
 	p[0].name = 'primary_expression'	
 
 def p_id(p):
@@ -121,6 +124,10 @@ def p_int(p):
 	p[0].place = p[1]
 	p[0].truelist = []
 	p[0].falselist = []
+	if p[1]=='x' or p[1]=='X':
+		p[0].value = int(p[1][2:],16)
+	else:	
+		p[0].value = int(p[1])
 	
 def p_float(p):
 	'''
@@ -1030,7 +1037,7 @@ def p_init_declarator(p):
 		p[0] = Node("init_declarator", [p[1],p[3]], p[2])
 		# Pointer error eg : int **x=y; y is int*
 		if isinstance(p[1].type,list):
-			if  p[1].type[-1]!=int(p[3].name[-1]):
+			if  p[1].type[1]!=int(p[3].name[-1]):
 				messages.add(f'Error at line {p.lineno(1)}: Array declaration dimension not matched')
 		elif isinstance(p[3].type,list):#pointer initialized to array name
 			if p[1].type.count('_')!=p[3].type[1]:#Dimension of pointer and array not matched
@@ -1276,7 +1283,7 @@ def p_direct_declarator(p):
 		if p[2]=='[':#Array, unknown length
 			if isinstance(p[1].type,list): #Already an array, dimension increasing
 				p[0].type = p[1].type
-				p[0].type[-1]+=1
+				p[0].type[1]+=1
 			else:
 				p[0].type = ['array',1]
 			messages.add(f'Error at line {p.lineno(2)}: size unknown')
@@ -1294,9 +1301,13 @@ def p_direct_declarator(p):
 				messages.add(f'Error at line {p.lineno(2)}: Array index not integer')
 			if isinstance(p[1].type,list): #Already an array, dimension increasing
 				p[0].type = p[1].type
-				p[0].type[-1]+=1
+				p[0].type[1]+=1
+				if isinstance(p[3].value,int):
+					p[0].type[2].append(p[3].value)
 			else:
 				p[0].type = ['array',1]
+				if isinstance(p[3].value,int):
+					p[0].type.append([p[3].value])
 			p[0].variables=p[1].variables
 			p[0].types_of_var.append(p[0].type)
 
