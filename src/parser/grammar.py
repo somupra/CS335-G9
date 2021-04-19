@@ -603,8 +603,6 @@ def p_equality_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
-		if (p[1].place == None) : 
-			messages.add(f'Error at line {p.lineno(1)} : Too complex expression to evaluate')
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
@@ -636,8 +634,6 @@ def p_and_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
-		if(p[1].place == None):
-			messages.add(f'Error at line {p.lineno(1)} : Too complex expression to evaluate')
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
@@ -652,14 +648,36 @@ def p_and_expression(p):
 			p[0].size = 0
 			messages.add(f'Error at line {p.lineno(2)} : Invalid type of operands with {p[2]} operator')	
 		else:
+			if(p[1].place == None or p[3].place == None):
+				messages.add(f'Error at line {p.lineno(2)} : Too complex expression to evaluate')
+			if(p[1].type != 'INT' and p[3].type != 'INT'):
+				x = newvar()
+				emit(x '=' 'to_int' p[1].place)
+				y = newvar()
+				emit(y '=' 'to_int' p[3].place)
+				p[0].place = newvar()
+				emit(p[0].place '=' x p[2] y)	
+			elif(p[1].type != 'INT' and p[3].type == 'INT'):
+				x = newvar()
+				emit(x '=' 'to_int' p[1].place)
+				p[0].place = newvar()
+				emit(p[0].place '=' x p[2] p[3].place)
+			elif(p[1].type == 'INT' and p[3].type != 'INT'):
+				x = newvar()
+				emit(x '=' 'to_int' p[3].place)
+				p[0].place = newvar()
+				emit(p[0].place '=' p[1].place p[2] x)
+			else : 
+				p[0].place = newvar()
+				emit(p[0].place '=' p[1].place p[2] p[3].place)	
+			p[0].truelist = []
+			p[0].falselist = []
 			p[0].type = 'INT'
 			p[1].type = 'INT'
 			p[3].type = 'INT'
 			p[0].size = 4
 			p[1].size = 4
 			p[3].size = 4
-			p[0].place = newvar()
-			emit(p[0].place '=' to_int(p[1].place) p[2] to_int(p[3].place))
 	p[0].name = 'and_expression'
 	
 def p_exclusive_or_expression(p):
@@ -671,8 +689,10 @@ def p_exclusive_or_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
-		if(p[1].place):
-			p[0].place = p[1].place
+		p[0].place = p[1].place
+		p[0].truelist = p[1].truelist
+		p[0].falselist = p[1].falselist
+		
 	else:
 		p[0] = Node("exclusive_or_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -684,14 +704,36 @@ def p_exclusive_or_expression(p):
 			p[0].size = 0
 			messages.add(f'Error at line {p.lineno(2)} : Invalid type of operands with {p[2]} operator')
 		else:
+			if(p[1].place == None or p[3].place == None):
+				messages.add(f'Error at line {p.lineno(2)} : Too complex expression to evaluate')
+			if(p[1].type != 'INT' and p[3].type != 'INT'):
+				x = newvar()
+				emit(x '=' 'to_int' p[1].place)
+				y = newvar()
+				emit(y '=' 'to_int' p[3].place)
+				p[0].place = newvar()
+				emit(p[0].place '=' x p[2] y)	
+			elif(p[1].type != 'INT' and p[3].type == 'INT'):
+				x = newvar()
+				emit(x '=' 'to_int' p[1].place)
+				p[0].place = newvar()
+				emit(p[0].place '=' x p[2] p[3].place)
+			elif(p[1].type == 'INT' and p[3].type != 'INT'):
+				x = newvar()
+				emit(x '=' 'to_int' p[3].place)
+				p[0].place = newvar()
+				emit(p[0].place '=' p[1].place p[2] x)
+			else : 
+				p[0].place = newvar()
+				emit(p[0].place '=' p[1].place p[2] p[3].place)	
+			p[0].truelist = []
+			p[0].falselist = []
 			p[0].type = 'INT'
 			p[1].type = 'INT'
 			p[3].type = 'INT'
 			p[0].size = 4
 			p[1].size = 4
 			p[3].size = 4
-			p[0].place = newvar()
-			emit(p[0].place '=' to_int(p[1].place) p[2] to_int(p[3].place))
 	p[0].name = 'exclusive_or_expression'
 
 def p_inclusive_or_expression(p):
@@ -703,8 +745,9 @@ def p_inclusive_or_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
-		if(p[1].place):
-			p[0].place = p[1].place
+		p[0].place = p[1].place
+		p[0].truelist = p[1].truelist
+		p[0].falselist = p[1].falselist
 	else:
 		p[0] = Node("inclusive_or_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -716,14 +759,36 @@ def p_inclusive_or_expression(p):
 			p[0].size = 0
 			messages.add(f'Error at line {p.lineno(2)} : Invalid type of operands with {p[2]} operator')
 		else:
+			if(p[1].place == None or p[3].place == None):
+				messages.add(f'Error at line {p.lineno(2)} : Too complex expression to evaluate')
+			if(p[1].type != 'INT' and p[3].type != 'INT'):
+				x = newvar()
+				emit(x '=' 'to_int' p[1].place)
+				y = newvar()
+				emit(y '=' 'to_int' p[3].place)
+				p[0].place = newvar()
+				emit(p[0].place '=' x p[2] y)	
+			elif(p[1].type != 'INT' and p[3].type == 'INT'):
+				x = newvar()
+				emit(x '=' 'to_int' p[1].place)
+				p[0].place = newvar()
+				emit(p[0].place '=' x p[2] p[3].place)
+			elif(p[1].type == 'INT' and p[3].type != 'INT'):
+				x = newvar()
+				emit(x '=' 'to_int' p[3].place)
+				p[0].place = newvar()
+				emit(p[0].place '=' p[1].place p[2] x)
+			else : 
+				p[0].place = newvar()
+				emit(p[0].place '=' p[1].place p[2] p[3].place)	
+			p[0].truelist = []
+			p[0].falselist = []
 			p[0].type = 'INT'
 			p[1].type = 'INT'
 			p[3].type = 'INT'
 			p[0].size = 4
 			p[1].size = 4
 			p[3].size = 4
-			p[0].place = newvar()
-			emit(p[0].place '=' to_int(p[1].place) p[2] to_int(p[3].place))
 	p[0].name = 'inclusive_or_expression'
 
 def p_logical_and_expression(p):
@@ -735,8 +800,9 @@ def p_logical_and_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
-		if(p[1].place):
-			p[0].place = p[1].place
+		p[0].place = p[1].place
+		p[0].truelist = p[1].truelist
+		p[0].falselist = p[1].falselist
 	else:
 		p[0] = Node("logical_and_expression", [p[1],p[3]], p[2])
 		p[0].type = 'BOOL'
@@ -744,6 +810,7 @@ def p_logical_and_expression(p):
 		backpatch(p[1].truelist, p[3].quad)
 		p[0].truelist = p[4].truelist
 		p[0].falselist = merge(p[1].falselist, p[4].falselist)
+		p[0].place = None
 	p[0].name = 'logical_and_expression'
 
 def p_label_m(p):
@@ -761,8 +828,7 @@ def p_logical_or_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
-		if(p[1].place):
-			p[0].place = p[1].place
+		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
 	else:
@@ -772,6 +838,7 @@ def p_logical_or_expression(p):
 		backpatch(p[1].falselist, p[3].quad)
 		p[0].truelist = merge(p[1].truelist, p[4].truelist)
 		p[0].falselist = p[4].falselist
+		p[0].place = None
 	p[0].name = 'logical_or_expression'
 
 def p_conditional_expression(p):
@@ -797,8 +864,12 @@ def p_assignment_expression(p):
 		p[0].type = p[1].type
 		p[0].size = p[1].size
 		p[0].place = p[1].place
+		p[0].truelist = p[1].truelist
+		p[0].falselist = p[1].falselist
 	else:
 		p[0] = Node("assignment_expression", [p[1],p[3]], p[2])
+		if(p[1].place == None or p[3].place == None):
+				messages.add(f'Error at line {p.lineno(2)} : Too complex expression to evaluate')
 		if(p[1].type != p[3].type and p[1].type != 'EMPTY'):
 			messages.add(f'Warning at line {p.lineno(2)} : Casting from {p[3].type} to {p[1].type} ', "warning")
 		p[0].type = p[1].type
@@ -835,6 +906,9 @@ def p_expression(p):
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
+		p[0].place = p[1].place
+		p[0].truelist = p[1].truelist
+		p[0].falselist = p[1].falselist
 	else:
 		p[0] = Node("expression", [p[1],p[3]], None)
 		if(p[1].type != p[3].type):
@@ -854,6 +928,9 @@ def p_constant_expression(p):
 	p[0].name = 'constant_expression'
 	p[0].type = p[1].type
 	p[0].size = p[1].size
+	p[0].place = p[1].place
+	p[0].truelist = p[1].truelist
+	p[0].falselist = p[1].falselist
 
 def p_declaration(p):
 	'''
@@ -1420,6 +1497,7 @@ def p_statement(p):
 	p[0] = p[1]
 	p[0].name = 'statement'
 	p[0].type= p[1].type
+	p[0].nextlist = p[1].nextlist
 
 def p_labeled_statement(p):
 	'''
