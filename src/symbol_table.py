@@ -13,6 +13,8 @@ size = {}
 size['INT']=4
 size['FLOAT']=4
 size['CHAR']=1
+counter = 0
+
 
 class SymbolTable:
 	def __init__(self, parent):
@@ -316,4 +318,12 @@ def give_out(filename):
 	filename = filename[slash+1 : ]
 	op_filename = base_dir + "output_"+filename[:-2]+".txt"
 	print_to_csv(0, op_filename)
+
+def newvar():
+	counter = counter + 1
+	return counter + '_' + 'var'
+
+def backpatch(lists, quad):
+	for i in range(len(lists)):
+		instr[lists[i]] = instr[lists[i]] + str(quad)
 
