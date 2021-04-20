@@ -4,6 +4,7 @@ from parser.grammar import parser
 from utlis import bfs, dfs
 import symbol_table as st 
 from errors.error import messages
+from parser.grammar import instr
 
 def main():
 	import ply.lex as lex
@@ -31,6 +32,8 @@ def main():
 	graph.write_raw('output_raw.dot')
 	# I'm passing the parent to the dfs function call.
 	st.give_out(filename)
+	for i in range(len(instr)):
+		print(instr[i])
 
 if __name__ == "__main__":
 	main()
