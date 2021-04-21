@@ -2,9 +2,10 @@ import sys
 import ply.yacc as yacc
 from lexer.lexrules import tokens
 import symbol_table as st
-from errors.error import messages
+from errors.error import messages 
 
 instr = [] 
+counter = 0
 
 class Node:
 	def __init__(self, typex, children=None, leaf=None):
@@ -29,6 +30,17 @@ class Node:
 		self.nextlist = typex
 		self.offset = 0
 		self.value = 'undefined' #To store constants, for array size, say, a[10]
+		
+def newvar():
+	global counter
+	counter = counter + 1
+	return str(counter) + '_' + 'var'
+
+def backpatch(lists, quad):
+	global instr
+	for i in range(len(lists)):
+		instr[int(lists[i])] = instr[int(lists[i])] + str(quad)
+
 
 start = 'translation_unit'
 
@@ -54,16 +66,16 @@ def p_primary_expression(p):
 	  p[0].type = p[2].type
 	  p[0].size = p[2].size
 	  p[0].place = p[2].place
-	  p[0].truelist = p[2].truelist
-	  p[0].falselist = p[2].falselist
+	  p[0].truelist = []
+	  p[0].falselist = []
 	else:
 		p[0] = Node("primary_expression", [p[1]])
 		p[0].type = p[1].type
 		p[0].variables = p[1].variables
 		p[0].size = p[1].size
 		p[0].place = p[1].place
-		p[0].truelist = p[1].truelist
-		p[0].falselist = p[1].falselist
+		p[0].truelist = []
+		p[0].falselist = []
 		p[0].value = p[1].value
 	p[0].name = 'primary_expression'	
 
@@ -299,13 +311,14 @@ def p_cast_expression(p):
 	cast_expression : unary_expression
 					| OP type_name CP cast_expression
 	'''
+	global instr
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
 		p[0].place = p[1].place
-		p[0].truelist = p[1].truelist
-		p[0].falselist = p[1].falselist
+		p[0].truelist = []
+		p[0].falselist = []
 		
 	else:
 		p[0] = p[4]
@@ -317,11 +330,11 @@ def p_cast_expression(p):
 		else :
 			p[0].type = p[2].type
 			p[0].size = p[2].size
-		x = 'to_' + p[2]
-		p[0].place = st.newvar() 
+		x = 'to_' + p[2].type
+		p[0].place = newvar() 
 		instr.append(p[0].place + '=' + x + p[4].place)
-		p[0].truelist = p[4].truelist
-		p[0].falselist = p[4].falselist
+		p[0].truelist = []
+		p[0].falselist = []
 		
 	p[0].name = 'cast_expression'
 
@@ -335,20 +348,21 @@ def p_multiplicative_expression(p):
 							| multiplicative_expression DIVIDE cast_expression
 							| multiplicative_expression MOD cast_expression
 	'''
+	global instr
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
 		p[0].place = p[1].place
-		p[0].truelist = p[1].truelist
-		p[0].falselist = p[1].falselist
+		p[0].truelist = []
+		p[0].falselist = []
 	elif p[1]=='(':
 		p[0] = p[2]
 		p[0].type = p[2].type
 		p[0].size = p[2].size
 		p[0].place = p[2].place
-		p[0].truelist = p[2].truelist
-		p[0].falselist = p[2].falselist
+		p[0].truelist = []
+		p[0].falselist = []
 	elif p[2]=='%':
 		p[0] = Node("unary_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -361,24 +375,24 @@ def p_multiplicative_expression(p):
 			messages.add(f'Error at line {p.lineno(2)} : Invalid type of operands with {p[2]} operator')
 		else:
 			if(p[1].type != 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				y = st.newvar()
+				y = newvar()
 				instr.append(y + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + y)	
 			elif(p[1].type != 'INT' and p[3].type == 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + p[3].place)
 			elif(p[1].type == 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + x)
 			else : 
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + p[3].place)	
 			p[0].truelist = []
 			p[0].falselist = []
@@ -397,17 +411,17 @@ def p_multiplicative_expression(p):
 			messages.add(f'Error at line {p.lineno(2)} : Invalid type of operands with {p[2]} operator')
 		elif(p[1].type == 'FLOAT' or p[3].type == 'FLOAT'):
 			if(p[1].type != 'FLOAT' and p[3].type == 'FLOAT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_float' + p[1].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + p[3].place)
 			elif(p[1].type == 'FLOAT' and p[3].type != 'FLOAT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_float' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + x)
 			else : 
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + p[3].place)
 			p[0].truelist = []
 			p[0].falselist = []
@@ -419,24 +433,24 @@ def p_multiplicative_expression(p):
 			p[3].size = 4
 		else:
 			if(p[1].type != 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				y = st.newvar()
+				y = newvar()
 				instr.append(y + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + y)	
 			elif(p[1].type != 'INT' and p[3].type == 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + p[3].place)
 			elif(p[1].type == 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + x)
 			else : 
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + p[3].place)
 			p[0].truelist = []
 			p[0].falselist = []
@@ -454,6 +468,7 @@ def p_additive_expression(p):
 						| additive_expression ADD multiplicative_expression
 						| additive_expression SUBTRACT multiplicative_expression
 	'''
+	global instr
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
@@ -469,17 +484,17 @@ def p_additive_expression(p):
 			messages.add(f'Error at line {p.lineno(2)} : Invalid type of operands with {p[2]} operator')
 		elif(p[1].type == 'FLOAT' or p[3].type == 'FLOAT'):
 			if(p[1].type != 'FLOAT' and p[3].type == 'FLOAT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_float' + p[1].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + p[3].place)
 			elif(p[1].type == 'FLOAT' and p[3].type != 'FLOAT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_float' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + x)
 			else : 
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + p[3].place)
 			p[0].truelist = []
 			p[0].falselist = []
@@ -491,24 +506,24 @@ def p_additive_expression(p):
 			p[3].size = 4
 		else:
 			if(p[1].type != 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				y = st.newvar()
+				y = newvar()
 				instr.append(y + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + y)	
 			elif(p[1].type != 'INT' and p[3].type == 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + p[3].place)
 			elif(p[1].type == 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + x)
 			else : 
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + p[3].place)
 			p[0].truelist = []
 			p[0].falselist = []
@@ -526,6 +541,7 @@ def p_shift_expression(p):
 					| shift_expression LSHIFT additive_expression
 					| shift_expression RSHIFT additive_expression
 	'''
+	global instr
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
@@ -545,24 +561,24 @@ def p_shift_expression(p):
 			messages.add(f'Error at line {p.lineno(2)} : Invalid type of operands with {p[2]} operator')
 		else:
 			if(p[1].type != 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				y = st.newvar()
+				y = newvar()
 				instr.append(y + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + y)	
 			elif(p[1].type != 'INT' and p[3].type == 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + p[3].place)
 			elif(p[1].type == 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + x)
 			else : 
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + p[3].place)	
 			p[0].truelist = []
 			p[0].falselist = []
@@ -582,13 +598,14 @@ def p_relational_expression(p):
 							| relational_expression LEQ shift_expression
 							| relational_expression GEQ shift_expression
 	'''
+	global instr
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
 		p[0].size = p[1].size
 		p[0].place = p[1].place
-		p[0].truelist = p[1].truelist
-		p[0].falselist = p[1].falselist
+		p[0].truelist = []
+		p[0].falselist = []
 	else:
 		p[0] = Node("relational_expression", [p[1],p[3]], p[2])
 		if((p[1].type[0:8] == 'pointer_' and p[3].type[0:8] != 'pointer_') or (p[1].type[0:8] != 'pointer_' and p[3].type[0:8] == 'pointer_')):
@@ -613,6 +630,7 @@ def p_equality_expression(p):
 						| equality_expression EQUAL relational_expression
 						| equality_expression NEQ relational_expression
 	'''
+	global instr
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
@@ -644,6 +662,7 @@ def p_and_expression(p):
 	and_expression : equality_expression
 					| and_expression B_AND equality_expression
 	'''
+	global instr
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
@@ -665,24 +684,24 @@ def p_and_expression(p):
 			if(p[1].place == None or p[3].place == None):
 				messages.add(f'Error at line {p.lineno(2)} : Too complex expression to evaluate')
 			if(p[1].type != 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				y = st.newvar()
+				y = newvar()
 				instr.append(y + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + y)	
 			elif(p[1].type != 'INT' and p[3].type == 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + p[3].place)
 			elif(p[1].type == 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + x)
 			else : 
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + p[3].place)	
 			p[0].truelist = []
 			p[0].falselist = []
@@ -699,6 +718,7 @@ def p_exclusive_or_expression(p):
 	exclusive_or_expression : and_expression
 							| exclusive_or_expression XOR and_expression
 	'''
+	global instr
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
@@ -721,24 +741,24 @@ def p_exclusive_or_expression(p):
 			if(p[1].place == None or p[3].place == None):
 				messages.add(f'Error at line {p.lineno(2)} : Too complex expression to evaluate')
 			if(p[1].type != 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				y = st.newvar()
+				y = newvar()
 				instr.append(y + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + y)	
 			elif(p[1].type != 'INT' and p[3].type == 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + p[3].place)
 			elif(p[1].type == 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + x)
 			else : 
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + p[3].place)	
 			p[0].truelist = []
 			p[0].falselist = []
@@ -755,6 +775,7 @@ def p_inclusive_or_expression(p):
 	inclusive_or_expression : exclusive_or_expression
 							| inclusive_or_expression B_OR exclusive_or_expression
 	'''
+	global instr
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
@@ -776,24 +797,24 @@ def p_inclusive_or_expression(p):
 			if(p[1].place == None or p[3].place == None):
 				messages.add(f'Error at line {p.lineno(2)} : Too complex expression to evaluate')
 			if(p[1].type != 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				y = st.newvar()
+				y = newvar()
 				instr.append(y + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + y)	
 			elif(p[1].type != 'INT' and p[3].type == 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[1].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + x + p[2] + p[3].place)
 			elif(p[1].type == 'INT' and p[3].type != 'INT'):
-				x = st.newvar()
+				x = newvar()
 				instr.append(x + '=' + 'to_int' + p[3].place)
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + x)
 			else : 
-				p[0].place = st.newvar()
+				p[0].place = newvar()
 				instr.append(p[0].place + '=' + p[1].place + p[2] + p[3].place)	
 			p[0].truelist = []
 			p[0].falselist = []
@@ -818,10 +839,10 @@ def p_logical_and_expression(p):
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
 	else:
-		p[0] = Node("logical_and_expression", [p[1],p[3]], p[2])
+		p[0] = Node("logical_and_expression", [p[1],p[4]], p[2])
 		p[0].type = 'BOOL'
 		p[0].size = 1
-		st.backpatch(p[1].truelist, p[3].quad)
+		backpatch(p[1].truelist, p[3].quad)
 		p[0].truelist = p[4].truelist
 		p[0].falselist = p[1].falselist + p[4].falselist
 		p[0].place = None
@@ -831,12 +852,14 @@ def p_label_m(p):
 	'''
 	label_m : 
 	'''
+	p[0] = Node("label_m", None, None)
 	p[0].quad = len(instr)
 
 def p_label_n(p):
 	'''
-	label_n : 
+	label_n :
 	'''
+	p[0] = Node("label_n", None, None) 
 	p[0].nextlist = [len(instr)]
 	instr.append('goto ---')
 
@@ -853,10 +876,10 @@ def p_logical_or_expression(p):
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
 	else:
-		p[0] = Node("logical_or_expression", [p[1],p[3]], p[2])
+		p[0] = Node("logical_or_expression", [p[1],p[4]], p[2])
 		p[0].type = 'BOOL'
 		p[0].size = 1
-		st.backpatch(p[1].falselist, p[3].quad)
+		backpatch(p[1].falselist, p[3].quad)
 		p[0].truelist = p[1].truelist + p[4].truelist
 		p[0].falselist = p[4].falselist
 		p[0].place = None
@@ -870,6 +893,9 @@ def p_conditional_expression(p):
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
+		p[0].place = p[1].place
+		p[0].truelist = p[1].truelist
+		p[0].falselist = p[1].falselist
 	else:
 		p[0] = Node("conditional_expression", [p[1],p[3],p[5]], '? :')
 	p[0].name = 'conditional_expression'
@@ -897,7 +923,7 @@ def p_assignment_expression(p):
 		p[3].type = p[1].type
 		p[0].size = p[1].size
 		p[3].size = p[1].size
-		instr.append(p[1].place + p[2] + p[3].place)
+		instr.append(p[1].place + p[2].type + p[3].place)
 	p[0].name = 'assignment_expression'
 
 def p_assignment_operator(p):
@@ -915,6 +941,7 @@ def p_assignment_operator(p):
 						| ORASSIGN
 	'''
 	p[0] = Node("assignment_operator", None, p[1])
+	p[0].type = p[1]
 	p[0].name = 'assignment_operator'
 #done
 	
@@ -960,6 +987,7 @@ def p_declaration(p):
 	'''
 	if len(p)==3:
 		p[0] = p[1]
+		p[0].nextlist = []
 	else:
 		p[0] = Node("declaration", [p[1],p[2]], None)
 		for i in range(0,len(p[2].variables)):
@@ -1004,6 +1032,7 @@ def p_declaration(p):
 			else:
 				st.make_var_entry(p[2].variables[i],p[1].type)
 		p[0].type=p[1].type
+		p[0].nextlist = []
 	p[0].name = 'declaration'
 
 
@@ -1259,8 +1288,7 @@ def p_type_qualifier(p):
 	p[0].name = p[1]
 	#if(p[1] == 'CONST'):
 			#p[0].other['CONSTANT'] = 1
-#done
-	
+
 def p_declarator(p):
 	'''
 	declarator : pointer direct_declarator
@@ -1478,6 +1506,9 @@ def p_initializer(p):
 	if len(p)==5:
 		p[0] = Node('initializer', [p[2]],p[3])
 		p[0].type = p[2].type
+		p[0].place = p[1].place
+		p[0].truelist = p[1].truelist
+		p[0].falselist = p[1].falselist
 	elif len(p)==4:
 		p[0] = p[2]
 		p[0].type = p[2].type
@@ -1498,6 +1529,9 @@ def p_initializer_list(p):
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].type = p[1].type
+		p[0].place = p[1].place
+		p[0].truelist = p[1].truelist
+		p[0].falselist = p[1].falselist
 		if p[1].name.find('curly')==-1:
 			p[0].name = 'initializer_list'
 	else:
@@ -1563,7 +1597,7 @@ def p_compound_statement(p):
 		else:
 			p[0].type = 'VOID'
 		p[0].nextlist = p[4].nextlist
-		st.backpatch(p[2].nextlist, p[3].quad)
+		backpatch(p[2].nextlist, p[3].quad)
 	else:
 		p[0]=None
 		p[0].type = 'VOID'
@@ -1589,15 +1623,14 @@ def p_declaration_list(p):
 	if len(p) == 2:
 		p[0] = p[1]
 		p[0].type = p[1].type
-		p[0].nextlist = p[1].nextlist
+		p[0].nextlist = []
 	else:
 		p[0] = Node('decl-list', [p[1], p[3]])
 		if (p[1].type == 'TYPE_ERROR' or p[3].type == 'TYPE_ERROR'):
 			p[0].type = 'TYPE_ERROR'
 		else:
 			p[0].type = 'VOID'
-		p[0].nextlist = p[3].nextlist
-		st.backpatch(p[1].nextlist, p[2].quad)
+		p[0].nextlist = []
 	p[0].name = 'declaration_list'
 
 def p_statement_list(p):
@@ -1616,7 +1649,7 @@ def p_statement_list(p):
 		else:
 			p[0].type = 'VOID'
 		p[0].nextlist = p[3].nextlist
-		st.backpatch(p[1].nextlist, p[2].quad)
+		backpatch(p[1].nextlist, p[2].quad)
 	p[0].name = 'statement_list'
 
 def p_expression_statement(p):
@@ -1646,7 +1679,7 @@ def p_selection_statement(p):
 		if (p[1] == 'if') :
 						p[0] = Node('if-then', [p[3], p[6]], "if")
 						p[0].type = p[6].type               
-						st.backpatch(p[3].truelist, p[5].quad)
+						backpatch(p[3].truelist, p[5].quad)
 						p[0].nextlist = p[3].falselist + p[6].nextlist
 	elif (len(p) == 6):
 		p[0] = Node('switch', [p[3], p[5]], 'switch')
@@ -1658,8 +1691,8 @@ def p_selection_statement(p):
 			p[0].type = 'TYPE_ERROR'
 		else:
 			p[0].type = 'VOID'
-		st.backpatch(p[3].truelist, p[5].quad)
-		st.backpatch(p[3].falselist, p[9].quad)
+		backpatch(p[3].truelist, p[5].quad)
+		backpatch(p[3].falselist, p[9].quad)
 		p[6].nextlist = p[7].nextlist
 		p[0].nextlist = p[6].nextlist + p[10].nextlist
 	p[0].name = 'selection_statement'
@@ -1675,8 +1708,8 @@ def p_iteration_statement(p):
 		p[0] = Node('while', [p[4], p[7]], 'while')
 		p[0].type = p[7].type
 		p[7].nextlist = p[8].nextlist
-		st.backpatch(p[7].nextlist, p[3].quad)
-		st.backpatch(p[4].truelist, p[6].quad)
+		backpatch(p[7].nextlist, p[3].quad)
+		backpatch(p[4].truelist, p[6].quad)
 		p[0].nextlist = p[4].falselist
 
 	elif len(p) == 13:
@@ -1686,10 +1719,10 @@ def p_iteration_statement(p):
 				p[0].type = p[11].type
 			else:
 				p[0].type = 'TYPE_ERROR'
-			st.backpatch(p[5].truelist, p[10].quad)
+			backpatch(p[5].truelist, p[10].quad)
 			p[11].nextlist = p[12].nextlist
-			st.backpatch(p[12].nextlist, p[6].quad)
-			st.backpatch(p[8].nextlist, p[4].quad)
+			backpatch(p[12].nextlist, p[6].quad)
+			backpatch(p[8].nextlist, p[4].quad)
 			p[0].nextlist = p[5].falselist
 			
 	elif len(p) == 8:
