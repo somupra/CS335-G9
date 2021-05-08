@@ -1,3 +1,9 @@
+void f(){
+	int c ;
+	c = 3 + 1 ;
+	return ;
+}
+
 int main()
 {
 	int a ;
@@ -14,15 +20,13 @@ int main()
 		y = 99 ;
 	}
 	b = 11 ;
-	
+	f() ;
 	while(a>b){
 		a = a+1 ;
 		b = b-1 ;
 	}
 	a = b ;
 	
-	for(a=0 ; a<5 ; a=2*a ){
-		b = b-a ;
-	}
 	b = a-1 ;
+	return ;
 }
