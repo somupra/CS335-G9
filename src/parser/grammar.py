@@ -6,6 +6,7 @@ from errors.error import messages
 
 instr = [] 
 counter = 0
+func_name = "--"
 
 class Node:
 	def __init__(self, typex, children=None, leaf=None):
@@ -34,7 +35,7 @@ class Node:
 def newvar():
 	global counter
 	counter = counter + 1
-	return 'temp' + '(' + str(counter) + ')'
+	return 'tmp@' + str(counter)
 
 def backpatch(lists, quad):
 	global instr
@@ -51,6 +52,7 @@ size['CHAR'] = 1
 size['FLOAT'] = 4
 size['BOOL'] = 1
 size["pointer_"] = 8
+size['VOID'] = 0
 
 def p_primary_expression(p):
 	'''
@@ -231,6 +233,7 @@ def p_postfix_expression(p):
 	elif p[3]==')':#3
 		#function call without args
 		p[0] = p[1]
+		instr.append("call " + p[1].variables[0] + " , 0")
 		if st.func_exists(p[1].variables[0]):
 			x = st.check_in_fs(p[1].variables[0])
 			p[0].type = x[2] #Return type of function
@@ -247,6 +250,12 @@ def p_postfix_expression(p):
 				messages.add(f'Error at line {p.lineno(2)}: Number of Arguments of function call do not match')
 		else:
 			messages.add(f'Error at line {p.lineno(2)}: Funcion does not exist')
+		num_args = len(p[1].variables) - 1
+		numm = 1
+		while(numm <= num_args):
+			instr.append("param " + p[1].variables[numm])
+			numm = numm + 1
+		instr.append("call " + p[1].variables[0] + " , " + str(num_args))
 	p[0].name = 'postfix_expression'
  		
 def p_argument_expression_list(p):
@@ -1352,13 +1361,16 @@ def p_declarator(p):
 	declarator : pointer direct_declarator
 			   | direct_declarator
 	'''
+	global func_name
 	if (len(p)==3):
 		p[0] = Node("declarator", [p[1],p[2]], None)
 		p[0].type = p[1].type
 		p[0].variables=p[2].variables
 		p[0].types_of_var.append(p[0].type)
+		func_name = p[0].variables[0]
 	else:
 		p[0] = p[1]
+		func_name = p[0].variables[0]
 	p[0].name = 'declarator'
 		
 def p_direct_declarator(p):
@@ -1812,7 +1824,10 @@ def p_jump_statement(p):
 	else:
 		if p[1] == 'continue': p[0] = Node('continue', None, 'continue')
 		if p[1] == 'break': p[0] = Node('break', None, 'break')
-		if p[1] == 'return': p[0] = Node('return', None, 'return')
+		if p[1] == 'return': 
+			p[0] = Node('return', None, 'return')
+			instr.append("return")
+		
 	p[0].name = 'jump_statement'
 	p[0].type = 'VOID'
 
@@ -1835,32 +1850,37 @@ def p_external_declaration(p):
 	p[0] = p[1]
 	p[0].name = 'external_declaration'
 
+def p_param_call(p):
+	'''
+	param_call : 
+	'''
+	global instr
+	global func_name
+	instr.append(func_name + ":")	
+
 def p_function_definition(p):
 	'''
-	function_definition : declaration_specifiers declarator declaration_list compound_statement
-						| declaration_specifiers declarator compound_statement
-						| declarator declaration_list compound_statement
-						| declarator compound_statement
+	function_definition : declaration_specifiers declarator declaration_list param_call compound_statement
+						| declaration_specifiers declarator param_call compound_statement
+						| declarator declaration_list param_call compound_statement
+						| declarator param_call compound_statement
 	'''
-	if len(p)==3:
-		p[0] = Node('func_defn_1',[p[1],p[2]],None)
-	elif len(p)==4:
-		p[0] = Node('func_defn_2',[p[1],p[2],p[3]],None)
+	if len(p)==4:
+		p[0] = Node('func_defn_1',[p[1],p[3]],None)
+	elif len(p)==5:
+		p[0] = Node('func_defn_2',[p[1],p[2],p[4]],None)
 		p[2].type=p[1].type
 		p[0].type = p[1].type
-		# Make all the entries : func name in parent symtab and all args in 
 		if st.func_exists(p[2].variables[0]):
 			messages.add(f'Error at line {p.lineno(2)}: Function Redeclaration')
 		else:
 			st.make_func_entry(p[2].variables,p[2].types_of_var,p[1].type)
-	elif len(p)==5:
-		p[0] = Node('func_defn_3',[p[1],p[2],p[3],p[4]],None)
+	elif len(p)==6:
+		p[0] = Node('func_defn_3',[p[1],p[2],p[3],p[5]],None)
 	p[0].name = 'function_definition'
-
+		
 def p_error(p):
 	messages.add(f'Error for {p} : syntax error found at line {p.lineno}')
-	# print("error for ", p)
-	# print("Syntax Error found at ", p.lineno)
 	
 
 parser = yacc.yacc(debug=1)
