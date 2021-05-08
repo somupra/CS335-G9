@@ -6,7 +6,7 @@ from errors.error import messages
 
 instr = [] 
 counter = 0
-func_name = "--"
+func_name = ""
 
 class Node:
 	def __init__(self, typex, children=None, leaf=None):
@@ -30,6 +30,8 @@ class Node:
 		self.falselist = typex
 		self.nextlist = typex
 		self.offset = 0
+		self.ret = typex
+		self.param_list = []
 		self.value = 'undefined' #To store constants, for array size, say, a[10]
 		
 def newvar():
@@ -70,6 +72,7 @@ def p_primary_expression(p):
 	  p[0].place = p[2].place
 	  p[0].truelist = []
 	  p[0].falselist = []
+	  p[0].ret = p[2].ret
 	else:
 		p[0] = Node("primary_expression", [p[1]])
 		p[0].type = p[1].type
@@ -79,6 +82,7 @@ def p_primary_expression(p):
 		p[0].truelist = []
 		p[0].falselist = []
 		p[0].value = p[1].value
+		p[0].ret = p[1].ret
 	p[0].name = 'primary_expression'	
 
 def p_id(p):
@@ -109,6 +113,7 @@ def p_id(p):
 	p[0].place = p[1]
 	p[0].truelist = []
 	p[0].falselist = []
+	p[0].ret = p[1]
 
 def p_char_const(p):
 	'''
@@ -121,6 +126,7 @@ def p_char_const(p):
 	p[0].place = p[1]
 	p[0].truelist = []
 	p[0].falselist = []
+	p[0].ret = p[1]
 	
 def p_string(p):
 	'''
@@ -133,6 +139,7 @@ def p_string(p):
 	p[0].place = p[1]
 	p[0].truelist = []
 	p[0].falselist = []
+	p[0].ret = p[1]
 	
 def p_int(p):
 	'''
@@ -145,6 +152,7 @@ def p_int(p):
 	p[0].place = p[1]
 	p[0].truelist = []
 	p[0].falselist = []
+	p[0].ret = p[1]
 	if p[1]=='x' or p[1]=='X':
 		p[0].value = int(p[1][2:],16)
 	else:	
@@ -161,6 +169,7 @@ def p_float(p):
 	p[0].place = p[1]
 	p[0].truelist = []
 	p[0].falselist = []
+	p[0].ret = p[1]
 	
 def p_postfix_expression(p):
 	'''
@@ -182,6 +191,7 @@ def p_postfix_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = []
 		p[0].falselist = []
+		p[0].ret = p[1].ret
 	elif p[2]=='[':
 		p[0] = Node("postfix_expression", [p[3]], p[1])
 	elif p[2]=='++':
@@ -230,17 +240,15 @@ def p_postfix_expression(p):
 		p[0] = Node("postfix_arrow_exp", [p[1]], p[3])#6
 		p[0].type = p[3].type
 		p[0].size = p[3].size
-	elif p[3]==')':#3
-		#function call without args
+	elif p[3]==')':
 		p[0] = p[1]
-		instr.append("call " + p[1].variables[0] + " , 0")
+		instr.append("call " + p[1].variables[0] + ", 0")
 		if st.func_exists(p[1].variables[0]):
 			x = st.check_in_fs(p[1].variables[0])
 			p[0].type = x[2] #Return type of function
 		else:
 			messages.add(f'Error at line {p.lineno(3)}: Funcion does not exist')
-	elif p[2]=='(':#4
-		#Function call with args
+	elif p[2]=='(':
 		p[0] = Node("postfix_expression", [p[3]], p[1])
 		if st.func_exists(p[1].variables[0]):
 			x = st.check_in_fs(p[1].variables[0])
@@ -250,12 +258,10 @@ def p_postfix_expression(p):
 				messages.add(f'Error at line {p.lineno(2)}: Number of Arguments of function call do not match')
 		else:
 			messages.add(f'Error at line {p.lineno(2)}: Funcion does not exist')
-		num_args = len(p[1].variables) - 1
-		numm = 1
-		while(numm <= num_args):
-			instr.append("param " + p[1].variables[numm])
-			numm = numm + 1
-		instr.append("call " + p[1].variables[0] + " , " + str(num_args))
+		for i in range(p[3].numof) :
+			instr.append("param " + p[3].param_list[i])
+
+		instr.append("call " + p[1].variables[0] + ", " + str(p[3].numof))
 	p[0].name = 'postfix_expression'
  		
 def p_argument_expression_list(p):
@@ -266,9 +272,12 @@ def p_argument_expression_list(p):
 	if len(p)==2:
 		p[0] = p[1]
 		p[0].numof = 1
+		p[0].param_list.append(p[1].place)
 	else:
 		p[0] = Node("arg_expr_list", [p[1],p[3]], None) #CHECKK, Comma not taken in leaf, all members of list connected to same node
 		p[0].numof = p[1].numof + 1
+		p[0].param_list = p[1].param_list
+		p[0].param_list.append(p[3].place)
 	p[0].name = 'argument_expression_list'
 
 def p_unary_expression(p):
@@ -287,6 +296,7 @@ def p_unary_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = []
 		p[0].falselist = []
+		p[0].ret = p[1].ret
 	elif p[1]=='++':
 		p[0] = Node("unary_expression", [p[2]], p[1])
 		if(p[2].type == 'INT' or p[2].type == 'FLOAT' or p[2].type == 'CHAR' or p[2].type == 'BOOL'):
@@ -375,7 +385,7 @@ def p_cast_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = []
 		p[0].falselist = []
-		
+		p[0].ret = p[1].ret
 	else:
 		p[0] = p[4]
 		if(p[4].type[0:8]=='pointer_'):
@@ -412,6 +422,7 @@ def p_multiplicative_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = []
 		p[0].falselist = []
+		p[0].ret = p[1].ret
 	elif p[1]=='(':
 		p[0] = p[2]
 		p[0].type = p[2].type
@@ -532,6 +543,7 @@ def p_additive_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
+		p[0].ret = p[1].ret
 	else:
 		p[0] = Node("additive_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -605,6 +617,7 @@ def p_shift_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
+		p[0].ret = p[1].ret
 	else:
 		p[0] = Node("shift_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -662,6 +675,7 @@ def p_relational_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = []
 		p[0].falselist = []
+		p[0].ret = p[1].ret
 	else:
 		p[0] = Node("relational_expression", [p[1],p[3]], p[2])
 		if((p[1].type[0:8] == 'pointer_' and p[3].type[0:8] != 'pointer_') or (p[1].type[0:8] != 'pointer_' and p[3].type[0:8] == 'pointer_')):
@@ -694,6 +708,7 @@ def p_equality_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
+		p[0].ret = p[1].ret
 	else:
 		p[0] = Node("equality_expression", [p[1],p[3]], p[2])
 		if((p[1].type[0:8] == 'pointer_' and p[3].type[0:8] != 'pointer_') or (p[1].type[0:8] != 'pointer_' and p[3].type[0:8] == 'pointer_')):
@@ -726,6 +741,7 @@ def p_and_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
+		p[0].ret = p[1].ret
 	else:
 		p[0] = Node("and_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -782,6 +798,7 @@ def p_exclusive_or_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
+		p[0].ret = p[1].ret
 		
 	else:
 		p[0] = Node("exclusive_or_expression", [p[1],p[3]], p[2])
@@ -839,6 +856,7 @@ def p_inclusive_or_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
+		p[0].ret = p[1].ret
 	else:
 		p[0] = Node("inclusive_or_expression", [p[1],p[3]], p[2])
 		if(p[1].type[0:8] == 'pointer_' or p[3].type[0:8] == 'pointer_'):
@@ -894,6 +912,7 @@ def p_logical_and_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
+		p[0].ret = p[1].ret
 	else:
 		p[0] = Node("logical_and_expression", [p[1],p[4]], p[2])
 		p[0].type = 'BOOL'
@@ -931,6 +950,7 @@ def p_logical_or_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
+		p[0].ret = p[1].ret
 	else:
 		p[0] = Node("logical_or_expression", [p[1],p[4]], p[2])
 		p[0].type = 'BOOL'
@@ -952,6 +972,7 @@ def p_conditional_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
+		p[0].ret = p[1].ret
 	else:
 		p[0] = Node("conditional_expression", [p[1],p[3],p[5]], '? :')
 	p[0].name = 'conditional_expression'
@@ -969,6 +990,7 @@ def p_assignment_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
+		p[0].ret = p[1].ret
 	else:
 		p[0] = Node("assignment_expression", [p[1],p[3]], p[2])
 		if(p[1].place == None or p[3].place == None):
@@ -1024,6 +1046,7 @@ def p_expression(p):
 		p[0].place = p[1].place
 		p[0].truelist = p[1].truelist
 		p[0].falselist = p[1].falselist
+		p[0].ret = p[1].ret
 	else:
 		p[0] = Node("expression", [p[1],p[3]], None)
 		if(p[1].type != p[3].type):
@@ -1046,6 +1069,7 @@ def p_constant_expression(p):
 	p[0].place = p[1].place
 	p[0].truelist = p[1].truelist
 	p[0].falselist = p[1].falselist
+	p[0].ret = p[1].ret
 
 def p_declaration(p):
 	'''
@@ -1821,6 +1845,7 @@ def p_jump_statement(p):
 			st.add_goto_ref(p[2],p.lineno(2))
 		else:
 			p[0] = Node('return', [p[2]], "return");
+			instr.append("return " + p[2].ret)
 	else:
 		if p[1] == 'continue': p[0] = Node('continue', None, 'continue')
 		if p[1] == 'break': p[0] = Node('break', None, 'break')

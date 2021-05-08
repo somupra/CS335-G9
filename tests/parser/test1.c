@@ -1,7 +1,7 @@
-void f(){
+int f(int a, int b){
 	int c ;
 	c = 3 + 1 ;
-	return ;
+	return c;
 }
 
 int main()
@@ -20,7 +20,7 @@ int main()
 		y = 99 ;
 	}
 	b = 11 ;
-	f() ;
+	f(5+7, 4) ;
 	while(a>b){
 		a = a+1 ;
 		b = b-1 ;
@@ -28,5 +28,5 @@ int main()
 	a = b ;
 	
 	b = a-1 ;
-	return ;
+	return 0;
 }
