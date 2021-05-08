@@ -69,3 +69,45 @@ TABLE NUMBER ,CHILDREN ,VARS ,FUNCS ,STRUCTS ,LABELS
 
 0 ,[1] ,,main [1, 0, 'INT'] ,,
 
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,func [1, 2, 'INT'] main [2, 0, 'INT'] ,,
+
+0 ,[1] ,,main [1, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,,,
+
+0 ,[1, 2] ,,f [1, 2, 'INT'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 2, 'INT'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 2, 'INT'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 2, 'INT'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 2, 'INT'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 2, 'INT'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 2, 'INT'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 0, 'INT'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 2, 'INT'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 2, 'INT'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 2, 'INT'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 2, 'VOID'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 0, 'VOID'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 0, 'VOID'] main [2, 0, 'INT'] ,,
+
+0 ,[1, 2] ,,f [1, 0, 'VOID'] main [2, 0, 'INT'] ,,
+
