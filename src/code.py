@@ -62,19 +62,19 @@ def returnn(ret_val):
 
 
 def print_call():
-	code.append('push eax')
-	code.append('push ebx')
-	code.append('push ecx')
-	code.append('push edx')
-	code.append('mov edx,4')
-	code.append('mov ecx,msg')
-	code.append('mov ebx,1')
-	code.append('mov eax,4')
-	code.append('int 0x80')
-	code.append('pop edx')
-	code.append('pop ecx')
-	code.append('pop ebx')
-	code.append('pop eax')
+	code.append('push rax')
+	code.append('push rsi')
+	code.append('push rdi')
+	code.append('push rdx')
+	code.append('mov rax,1')
+	code.append('mov rsi,msg')
+	code.append('mov rdi,1')
+	code.append('mov rdx,10')
+	code.append('syscall')
+	code.append('pop rdx')
+	code.append('pop rdi')
+	code.append('pop rsi')
+	code.append('pop rax')
 
 
 
