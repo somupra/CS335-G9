@@ -5,6 +5,7 @@ from utlis import bfs, dfs
 import symbol_table as st 
 from errors.error import messages
 from parser.grammar import instr
+from code import assembly
 
 def main():
 	import ply.lex as lex
@@ -34,6 +35,7 @@ def main():
 	st.give_out(filename)
 	for i in range(len(instr)):
 		print(instr[i])
+	assembly()
 
 if __name__ == "__main__":
 	main()
