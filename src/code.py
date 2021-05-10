@@ -10,9 +10,23 @@ def param(x):
 	if '@' in x:
 		# temporary var : To be completed
 		code.append('')
+	elif x[0]=='\'':
+		# char : push 'a'
+		code.append('push '+x[:x.find(',scope')])
+	elif x[:x.find(',scope')].isnumeric() or x[0]=='0':
+		# int : push 10 / push 0x10
+		code.append('push '+x[:x.find(',scope')])
 	else:
-		# Integer or char : push 0x10 push 'a'
-		code.append('push '+x)
+		# Normal variable, get scope, get offset, use stack address to get value
+		var_name = x[:x.find(',scope')]
+		sym_tab = int(x[x.find(',scope')+6:])
+		# finding the variable from current scope till global
+		while sym_tab!= None and symbol_table.allsymboltables[sym_tab].variables.get(var_name)==None :
+			sym_tab = symbol_table.allsymboltables[sym_tab].parent_idx
+		
+		offset = symbol_table.allsymboltables[sym_tab].variables[var_name]['offset']
+		code.append('push [ebp-'+str(4+offset)+']')
+
 
 def call_begin(x):
 	#Fulfills both caller and callee partially.
