@@ -7,6 +7,7 @@ from errors.error import messages
 instr = [] 
 counter = 0
 func_name = ""
+func_type_list = []
 
 class Node:
 	def __init__(self, typex, children=None, leaf=None):
@@ -1138,6 +1139,7 @@ def p_declaration_specifiers(p):
 	'''
 	if len(p)==2:
 		p[0] = p[1]
+		func_type_list.append(p[1].type)
 		#p[0].type = p[1].type
 	else:
 		p[0] = Node("declaration_specifiers", [p[1],p[2]], None)
@@ -1432,6 +1434,10 @@ def p_direct_declarator(p):
 			p[0].types_of_var=p[1].types_of_var
 			p[0].variables+=p[3].variables
 			p[0].types_of_var+=p[3].types_of_var
+			# FOR func decl case, i.e f(int a, int b)
+			for x in p[1].variables:
+				if len(func_type_list)>0:
+					func_type_list.pop()
 		elif p[2]=='[':
 			if p[3].type!='INT' and p[3].type!='FLOAT' and p[3].type!='CHAR':
 				messages.add(f'Error at line {p.lineno(2)}: Array index not integer')
@@ -1844,14 +1850,26 @@ def p_jump_statement(p):
 			p[0] = Node('goto', p[2], "goto") #CHECKK
 			st.add_goto_ref(p[2],p.lineno(2))
 		else:
-			p[0] = Node('return', [p[2]], "return");
+			p[0] = Node('return', [p[2]], "return")
 			instr.append("return " + p[2].ret)
+			if len(func_type_list)>0:
+				#print("\n**\n",func_type_list[-1],p[2].type)
+				if p[2].type!=func_type_list[-1]:
+					if (p[2].type=='INT' and func_type_list[-1]=='FLOAT') or (p[2].type=='FLOAT' and func_type_list[-1]=='INT'):
+						messages.add(f'Error at line {p.lineno(1)}: Does not match function return type, INT and FLOAT')
+					else:
+						messages.add(f'Error at line {p.lineno(1)}: Does not match function return type')
 	else:
 		if p[1] == 'continue': p[0] = Node('continue', None, 'continue')
 		if p[1] == 'break': p[0] = Node('break', None, 'break')
 		if p[1] == 'return': 
 			p[0] = Node('return', None, 'return')
 			instr.append("return")
+			if len(func_type_list)>0 and func_type_list[-1]!='VOID' and func_type_list[-1]!='void':
+				#print("\n**\n",func_type_list[-1])
+				messages.add(f'Error at line {p.lineno(1)}: Does not match function return type')
+
+
 		
 	p[0].name = 'jump_statement'
 	p[0].type = 'VOID'
