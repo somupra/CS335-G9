@@ -259,7 +259,7 @@ def p_postfix_expression(p):
 		else:
 			messages.add(f'Error at line {p.lineno(2)}: Funcion does not exist')
 		for i in range(p[3].numof) :
-			instr.append("param " + p[3].param_list[i])
+			instr.append("param " + p[3].param_list[i]+",scope"+str(st.checkscope()))
 
 		instr.append("call " + p[1].variables[0] + ", " + str(p[3].numof))
 	p[0].name = 'postfix_expression'
