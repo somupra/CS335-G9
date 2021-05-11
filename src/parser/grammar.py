@@ -42,7 +42,7 @@ def newvar():
 def backpatch(lists, quad):
 	global instr
 	for i in range(len(lists)):
-		instr[int(lists[i])] = [instr[int(lists[i])] , str(quad)]
+		instr[int(lists[i])] = instr[int(lists[i])] + str(quad)
 
 
 start = 'translation_unit'
@@ -1002,7 +1002,7 @@ def p_assignment_expression(p):
 			p[3].type = p[1].type
 			p[0].size = p[1].size
 			p[3].size = p[1].size
-			instr.append(p[1].place + p[2].type + x)
+			instr.append(p[1].place + ' ' + p[2].type + ' ' + x)
 			messages.add(f'Warning at line {p.lineno(2)} : Casting from {p[3].type} to {p[1].type} ', "warning")
 		else :
 			p[0].type = p[1].type

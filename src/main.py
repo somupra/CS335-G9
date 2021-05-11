@@ -33,8 +33,16 @@ def main():
 	graph.write_raw('output_raw.dot')
 	# I'm passing the parent to the dfs function call.
 	st.give_out(filename)
+	cnt = 0
 	for i in range(len(instr)):
-		print(instr[i])
+		temp_str = instr[i]
+		if(temp_str[len(temp_str)-1] == ':'):
+			#cnt = 1
+			print(instr[i])
+			cnt = cnt+1
+		else : 
+			print([cnt, instr[i]])
+			cnt = cnt+1
 	#assembly()
 
 if __name__ == "__main__":

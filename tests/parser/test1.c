@@ -9,9 +9,11 @@ int main()
 	int a ;
 	int b ;
 	int i ;
+	int c ;
 	a = 7 ;
-	//b = 5 ;
-	if(a>b){
+	c = 3 ;
+	b = 5 ;
+	if(a > b){
 		int x ;
 		x = 7.2 ;
 	}
