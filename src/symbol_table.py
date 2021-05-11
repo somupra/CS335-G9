@@ -14,6 +14,8 @@ size['INT']=4
 size['FLOAT']=4
 size['CHAR']=1
 
+list_of_strings = []
+
 class SymbolTable:
 	def __init__(self, parent):
 		self.parent_idx = parent
