@@ -10,7 +10,7 @@ int main()
 	int b ;
 	int i ;
 	a = 7 ;
-	b = 5 ;
+	//b = 5 ;
 	if(a>b){
 		int x ;
 		x = 7.2 ;
@@ -19,14 +19,15 @@ int main()
 		int y ;
 		y = 99 ;
 	}
-	b = 11 ;
+	a = b+5 ;
+	//b = 11 ;
 	f(5+7, 4) ;
 	while(a>b){
 		a = a+1 ;
-		b = b-1 ;
+		//b = b-1 ;
 	}
 	a = b ;
 	
-	b = a-1 ;
+	//b = a-1 ;
 	return 0;
 }

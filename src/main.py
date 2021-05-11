@@ -35,7 +35,7 @@ def main():
 	st.give_out(filename)
 	for i in range(len(instr)):
 		print(instr[i])
-	assembly()
+	#assembly()
 
 if __name__ == "__main__":
 	main()
