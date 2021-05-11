@@ -5,3 +5,7 @@ __pycache__
 __pycache__/*
 parsetab.py
 parser.out
+output/*
+*.ps 
+*.dot
+*.asm
