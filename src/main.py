@@ -37,7 +37,6 @@ def main():
 	for i in range(len(instr)):
 		temp_str = instr[i]
 		if(temp_str[len(temp_str)-1] == ':'):
-			#cnt = 1
 			print(instr[i])
 			cnt = cnt+1
 		else : 

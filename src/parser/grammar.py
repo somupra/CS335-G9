@@ -42,7 +42,7 @@ def newvar():
 def backpatch(lists, quad):
 	global instr
 	for i in range(len(lists)):
-		instr[int(lists[i])] = instr[int(lists[i])] + str(quad)
+		instr[int(lists[i])] = instr[int(lists[i])] + ' {' + str(quad) + '}'
 
 
 start = 'translation_unit'
@@ -690,8 +690,8 @@ def p_relational_expression(p):
 			p[0].place = None
 			p[0].truelist = [len(instr)]
 			p[0].falselist = [len(instr)+1]
-			instr.append('if ' + p[1].place + ' ' + p[2] + ' ' + p[3].place + ' goto: ')
-			instr.append('goto: ')
+			instr.append('if {' + p[1].place + ' ' + p[2] + ' ' + p[3].place + '}' + ' goto')
+			instr.append('goto')
 	p[0].name = 'relational_expression'
 
 def p_equality_expression(p):
@@ -723,8 +723,8 @@ def p_equality_expression(p):
 			p[0].place = None
 			p[0].truelist = [len(instr)]
 			p[0].falselist = [len(instr)+1]
-			instr.append('if ' + p[1].place + ' ' + p[2] + ' ' + p[3].place + ' goto: ')
-			instr.append('goto: ')
+			instr.append('if ' + p[1].place + ' ' + p[2] + ' ' + p[3].place + ' goto')
+			instr.append('goto')
 			
 	p[0].name = 'equality_expression'
 
@@ -936,7 +936,7 @@ def p_label_n(p):
 	'''
 	p[0] = Node("label_n", None, None) 
 	p[0].nextlist = [len(instr)]
-	instr.append('goto: ')
+	instr.append('goto')
 
 def p_logical_or_expression(p):
 	'''
