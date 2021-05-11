@@ -114,7 +114,6 @@ def assembly():
 			x = y[1]
 		else : 
 			x = y
-		print(x)
 		if x=='printcall':
 			print_call()
 		elif x.find(':')!=-1:

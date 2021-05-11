@@ -3,8 +3,12 @@ section .text
 f:
 push rbp
 mov  rbp, rsp
-sub rsp, byte 8
-mov rax, c
+sub rsp, byte 0
+mov rax, 1
+mov rsp, rbp
+pop rbp
+ret
+mov rax, 0
 mov rsp, rbp
 pop rbp
 ret
