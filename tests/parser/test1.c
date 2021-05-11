@@ -1,7 +1,8 @@
 int f(int a, int b){
-	int c ;
-	c = 3 + 1 ;
-	return c;
+	if(a < b || b >= a){
+		return 1;
+	}
+	return 0;
 }
 
 int main()

@@ -42,7 +42,7 @@ def main():
 		else : 
 			print([cnt, instr[i]])
 			cnt = cnt+1
-	#assembly()
+	assembly()
 
 if __name__ == "__main__":
 	main()

@@ -109,7 +109,11 @@ def func_begin(name):
 def assembly():
 	code.append('global main')
 	code.append('section .text')
-	for x in instr:
+	for y in instr:
+		if(isinstance(y, tuple)):
+			x = y[1]
+		else : 
+			x = y
 		print(x)
 		if x=='printcall':
 			print_call()

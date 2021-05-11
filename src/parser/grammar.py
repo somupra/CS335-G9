@@ -27,9 +27,9 @@ class Node:
 		self.numof = 0
 		self.place = typex
 		self.quad = typex
-		self.truelist = typex
-		self.falselist = typex
-		self.nextlist = typex
+		self.truelist = []
+		self.falselist = []
+		self.nextlist = []
 		self.offset = 0
 		self.ret = typex
 		self.param_list = []
@@ -997,14 +997,14 @@ def p_assignment_expression(p):
 		if(p[1].place == None or p[3].place == None):
 				messages.add(f'Error at line {p.lineno(2)} : Too complex expression to evaluate')
 		if(p[1].type != p[3].type and p[1].type != 'EMPTY'):
+			messages.add(f'Warning at line {p.lineno(2)} : Casting from {p[3].type} to {p[1].type} ', "warning")
 			x = newvar()
 			instr.append(x + ' = ' + 'to_' + p[1].type.lower() + '(' + p[3].place + ')')
+			instr.append(p[1].place + ' ' + p[2].type + ' ' + x)
 			p[0].type = p[1].type
 			p[3].type = p[1].type
 			p[0].size = p[1].size
 			p[3].size = p[1].size
-			instr.append(p[1].place + ' ' + p[2].type + ' ' + x)
-			messages.add(f'Warning at line {p.lineno(2)} : Casting from {p[3].type} to {p[1].type} ', "warning")
 		else :
 			p[0].type = p[1].type
 			p[3].type = p[1].type
