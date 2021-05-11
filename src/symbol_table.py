@@ -31,6 +31,10 @@ class SymbolTable:
 # 0 is the index of global symbol table
 table_just_made = 0
 symtabtrack.append(0)
+global_symtab = SymbolTable(None)# parent is none
+allsymboltables.append(global_symtab)
+
+
 def checkscope():
 	return symtabtrack[-1]
 
@@ -40,10 +44,6 @@ def add_function_params(names,types):
 		func_params[names[i]]=types[i]
 
 def newscope():
-	if (len(allsymboltables)==0):
-		globalsymtab = SymbolTable(None)
-		allsymboltables.append(globalsymtab)
-		symtabtrack.append(0)
 	# Made global symtab in first call
 	new_index = len(allsymboltables)
 	parent_idx = symtabtrack[-1] # Last index is the parent of this new one
