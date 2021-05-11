@@ -19,6 +19,15 @@ def main():
 	with open(sys.argv[1]) as f:
 		input = f.read()
 
+	lexer.input(input)
+
+	while(1):
+		tok = lexer.token()
+		if not tok:
+			break
+		if tok.type=='STRING':
+			st.list_of_strings.append(tok.value[1:-1])
+		
 	obj = parser.parse(input=input, lexer=lexer, tracking=True)
 
 	if not messages.ok:
