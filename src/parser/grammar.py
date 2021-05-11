@@ -98,7 +98,8 @@ def p_id(p):
 		p[0].type = 'EMPTY'
 		p[0].size = 0
 		if st.checkscope()!=0:
-			messages.add(f'Error at line {p.lineno(1)} : Variable not declared')
+			print("\nvariable not declared error removed\n")
+			#messages.add(f'Error at line {p.lineno(1)} : Variable not declared')
 	else:
 		if isinstance(x,str):
 			p[0].type = x
