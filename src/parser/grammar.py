@@ -1122,7 +1122,10 @@ def p_declaration(p):
 				if st.var_curr_scope_exists(p[2].variables[i]):
 					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 			else:
-				st.make_var_entry(p[2].variables[i],p[1].type)
+				if st.var_curr_scope_exists(p[2].variables[i]):
+					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
+				else:
+					st.make_var_entry(p[2].variables[i],p[1].type)
 		p[0].type=p[1].type
 		p[0].nextlist = []
 	p[0].name = 'declaration'
