@@ -133,5 +133,94 @@ def assembly():
 		f.write('\n')
 	f.close()
 
+# New code
+class AsmCode:
+	def __init__(self):
+		"""Init AsmCode"""
+		self.lines = []
+		self.comm = []
+		self.globals = []
+		self.data = []
+		self.string_literals = []
+	
+	def add(self, cmd):
+		"""Add a command to the code."""
+		self.lines.append(cmd)
+	
+	def add_global(self, name):
+		"""Add a name to the code as global.
 
+		name (str) - The name to add.
 
+		"""
+		self.globals.append(f"\t.global {name}")
+	
+	def add_data(self, name, size, init):
+		"""Add static data to the code.
+
+		init - the value to initialize `name` to
+		"""
+		self.data.append(f"{name}:")
+		size_strs = {1: "byte",
+					 2: "word",
+					 4: "int",
+					 8: "quad"}
+
+		if init:
+			self.data.append(f"\t.{size_strs[size]} {init}")
+		else:
+			self.data.append(f"\t.zero {size}")
+
+	def add_comm(self, name, size, local):
+		"""Add a common symbol to the code."""
+		if local:
+			self.comm.append(f"\t.local {name}")
+		self.comm.append(f"\t.comm {name} {size}")
+
+	def add_string_literal(self, name, chars):
+		"""Add a string literal to the ASM code."""
+		self.string_literals.append(f"{name}:")
+		data = ",".join(str(char) for char in chars)
+		self.string_literals.append(f"\t.byte {data}")
+
+	def full_code(self): 
+		"""Produce the full assembly code.
+
+		return (str) - The assembly code, ready for saving to disk and
+		assembling.
+
+		"""
+		header = ["\t.intel_syntax noprefix"]
+		header += self.comm
+		if self.string_literals or self.data:
+			header += ["\t.section .data"]
+			header += self.data
+			header += self.string_literals
+			header += [""]
+
+		header += ["\t.section .text"] + self.globals
+		header += [str(line) for line in self.lines]
+
+		return "\n".join(header + ["\t.att_syntax noprefix", ""])
+	
+
+import symbol_table as st
+
+def assemble(code_3ac):
+	asm = AsmCode()
+	# add global
+	# fill in data
+	# process the code_3ac lines
+		# register allocation
+		# operations -- create functions corresponding to use cases
+	
+	# print to asm file
+	asm_lines = asm.full_code()
+	with open("src/assembly.s", "w") as asm_file:
+		for line in asm_lines:
+			asm_file.write(line)
+	
+	
+
+	
+	

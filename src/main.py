@@ -5,7 +5,7 @@ from utlis import bfs, dfs
 import symbol_table as st 
 from errors.error import messages
 from parser.grammar import instr
-from code import assembly
+from codegen.codegen import assembly
 
 def main():
 	import ply.lex as lex
@@ -42,16 +42,24 @@ def main():
 	graph.write_raw('output_raw.dot')
 	# I'm passing the parent to the dfs function call.
 	st.give_out(filename)
+
+	to_asm = []
 	cnt = 0
 	for i in range(len(instr)):
 		temp_str = instr[i]
 		if(temp_str[len(temp_str)-1] == ':'):
+			to_asm.append(("label", instr[i]))
 			print(instr[i])
 			cnt = cnt+1
-		else : 
-			print([cnt, instr[i]])
+			
+
+		else: 
+			to_asm.append(("command", instr[i]))
+			print("\t", [cnt, instr[i]])
 			cnt = cnt+1
-	assembly()
+
+	from codegen.codegen import assemble
+	assemble(to_asm)
 
 if __name__ == "__main__":
 	main()

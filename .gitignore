@@ -9,3 +9,5 @@ parser.out
 *.ps 
 *.dot
 *.asm
+mytest.c
+*.s
