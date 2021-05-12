@@ -33,13 +33,14 @@ class Node:
 		self.offset = 0
 		self.ret = typex
 		self.param_list = []
-		self.value = 'undefined' #To store constants, for array size, say, a[10]
+		self.value = None #To store constants, for array size, say, a[10]
+		self.values_of_var = []
 		
 def newvar(tt):
 	global counter
 	counter = counter + 1
 	name = 'tmp@' + str(counter)
-	st.make_var_entry(name, tt)
+	st.make_var_entry(name, tt, False, None)
 	return name
 	
 def backpatch(lists, quad):
@@ -131,6 +132,7 @@ def p_char_const(p):
 	p[0].truelist = []
 	p[0].falselist = []
 	p[0].ret = p[1]
+	p[0].value = p[1][1:-1]
 	
 def p_string(p):
 	'''
@@ -174,6 +176,7 @@ def p_float(p):
 	p[0].truelist = []
 	p[0].falselist = []
 	p[0].ret = p[1]
+	p[0].value = float(p[1])
 	
 def p_postfix_expression(p):
 	'''
@@ -200,38 +203,24 @@ def p_postfix_expression(p):
 		p[0] = Node("postfix_expression", [p[3]], p[1])
 	elif p[2]=='++':
 		p[0] = Node("postfix_expression", [p[1]], p[2])#7
-		if(p[1].type == 'INT' or p[1].type == 'FLOAT' or p[1].type == 'CHAR' or p[1].type == 'BOOL'):
-			p[0].type = 'INT'
-			p[0].size = 4
+		if(p[1].type == 'INT' or p[1].type == 'FLOAT'):
+			p[0].type = 'VOID'
+			p[0].size = 0
 			p[0].truelist = []
 			p[0].falselist = []
-			if(p[1].type == 'INT'):
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + p[1].place + ' + 1')
-			else:
-				x = newvar('INT')
-				instr.append(x + ' = ' + 'to_int' + '(' + p[1].place + ')')
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + x + ' + 1')
+			instr.append(p[1].place + ' = ' + p[1].place + ' + 1')	
 		else:
 			p[0].type = 'TYPE_ERROR'
 			p[0].size = 0
 			messages.add(f'Error at line {p.lineno(2)} : Cannot use operator {str(p[2])} with type {str(p[1].type)}')
 	elif p[2]=='--':
 		p[0] = Node("postfix_expression", [p[1]], p[2])#8
-		if(p[1].type == 'INT' or p[1].type == 'FLOAT' or p[1].type == 'CHAR' or p[1].type == 'BOOL'):
-			p[0].type = 'INT'
-			p[0].size = 4
+		if(p[1].type == 'INT' or p[1].type == 'FLOAT'):
+			p[0].type = 'VOID'
+			p[0].size = 0
 			p[0].truelist = []
 			p[0].falselist = []
-			if(p[1].type == 'INT'):
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + p[1].place + ' - 1')
-			else:
-				x = newvar('INT')
-				instr.append(x + ' = ' + 'to_int' + '(' + p[1].place + ')')
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + x + ' - 1')
+			instr.append(p[1].place + ' = ' + p[1].place + ' - 1')
 		else:
 			p[0].type = 'TYPE_ERROR'
 			p[0].size = 0
@@ -305,38 +294,24 @@ def p_unary_expression(p):
 		p[0].ret = p[1].ret
 	elif p[1]=='++':
 		p[0] = Node("unary_expression", [p[2]], p[1])
-		if(p[2].type == 'INT' or p[2].type == 'FLOAT' or p[2].type == 'CHAR' or p[2].type == 'BOOL'):
-			p[0].type = 'INT'
-			p[0].size = 4
+		if(p[2].type == 'INT' or p[2].type == 'FLOAT'):
+			p[0].type = 'VOID'
+			p[0].size = 0
 			p[0].truelist = []
 			p[0].falselist = []
-			if(p[2].type == 'INT'):
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + p[2].place + ' + 1')
-			else:
-				x = newvar('INT')
-				instr.append(x + ' = ' + 'to_int' + '(' + p[2].place + ')')
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + x + ' + 1')
+			instr.append(p[2].place + ' = ' + p[2].place + ' + 1')
 		else:
 			p[0].type = 'TYPE_ERROR'
 			p[0].size = p[2].size
 			messages.add(f'Error at line {p.lineno(1)} : Cannot use operator {str(p[1])} with type {str(p[2].type)}')
 	elif p[1]=='--':
 		p[0] = Node("unary_expression", [p[2]], p[1])
-		if(p[2].type == 'INT' or p[2].type == 'FLOAT' or p[2].type == 'CHAR' or p[2].type == 'BOOL'):
-			p[0].type = 'INT'
-			p[0].size = 4
+		if(p[2].type == 'INT' or p[2].type == 'FLOAT'):
+			p[0].type = 'VOID'
+			p[0].size = 0
 			p[0].truelist = []
 			p[0].falselist = []
-			if(p[2].type == 'INT'):
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + p[2].place + ' - 1')
-			else:
-				x = newvar('INT')
-				instr.append(x + ' = ' + 'to_int' + '(' + p[2].place + ')')
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + x + ' - 1')
+			instr.append(p[2].place + ' = ' + p[2].place + ' - 1')
 		else:
 			p[0].type = 'TYPE_ERROR'
 			p[0].size = p[2].size
@@ -1093,7 +1068,10 @@ def p_declaration(p):
 				if st.var_curr_scope_exists(p[2].variables[i]):
 					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 				else:
-					st.make_var_entry(p[2].variables[i],p[1].type)
+					if p[2].values_of_var[i]==None:
+						st.make_var_entry(p[2].variables[i],p[1].type,False,None)
+					else:
+						st.make_var_entry(p[2].variables[i],p[1].type,True,p[2].values_of_var[i])
 				p[2].types_of_var[i] = p[1].type
 
 			elif p[2].types_of_var[i][0:8]=='pointer_':
@@ -1102,14 +1080,20 @@ def p_declaration(p):
 					if st.var_curr_scope_exists(p[2].variables[i]):
 						messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 					else:
-						st.make_var_entry(p[2].variables[i],p[2].types_of_var[i]+p[1].type)
+						if p[2].values_of_var[i]==None:
+							st.make_var_entry(p[2].variables[i],p[2].types_of_var[i]+p[1].type,False,None)
+						else:
+							st.make_var_entry(p[2].variables[i],p[2].types_of_var[i]+p[1].type,True,p[2].values_of_var[i])
 					p[2].types_of_var[i]=p[2].types_of_var[i]+p[1].type
 
 				elif p[2].types_of_var[i][-len(p[1].type):]==p[1].type:#Pointer type matched
 					if st.var_curr_scope_exists(p[2].variables[i]):
 						messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 					else:
-						st.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
+						if p[2].values_of_var[i]==None:
+							st.make_var_entry(p[2].variables[i],p[2].types_of_var[i],False,None)
+						else:
+							st.make_var_entry(p[2].variables[i],p[2].types_of_var[i],True,p[2].values_of_var[i])
 				else:
 					#print(p[2].variables[i],p[2].types_of_var[i])
 					messages.add(f'Error at line {p.lineno(2)}: TYPE ERROR IN POINTER DECLARATION')
@@ -1119,7 +1103,7 @@ def p_declaration(p):
 				if st.var_curr_scope_exists(p[2].variables[i]):
 					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 				else:
-					st.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
+					st.make_var_entry(p[2].variables[i],p[2].types_of_var[i],False,None)
 
 			elif p[1].type!=p[2].types_of_var[i]:
 				messages.add(f'Error at line {p.lineno(2)}: TYPE ERROR IN DECLARATION')
@@ -1130,7 +1114,10 @@ def p_declaration(p):
 				if st.var_curr_scope_exists(p[2].variables[i]):
 					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 				else:
-					st.make_var_entry(p[2].variables[i],p[1].type)
+						if p[2].values_of_var[i]==None:
+							st.make_var_entry(p[2].variables[i],p[1].type,False,None)
+						else:
+							st.make_var_entry(p[2].variables[i],p[1].type,True,p[2].values_of_var[i])
 		p[0].type=p[1].type
 		p[0].nextlist = []
 	p[0].name = 'declaration'
@@ -1166,10 +1153,13 @@ def p_init_declarator_list(p):
 		p[0].types_of_var=p[1].types_of_var
 		p[0].variables+=p[3].variables
 		p[0].types_of_var+=p[3].types_of_var
+		p[0].values_of_var = p[1].values_of_var
+		p[0].values_of_var += p[3].value
 		if p[1].type!=p[3].type:
 			messages.add(f'Error at line {p.lineno(1)}: Type mismatch in declarator list')
 	else:
 		p[0] = p[1]
+		p[0].values_of_var.append(p[1].value)
 	p[0].name = 'init_declarator_list'	
 
 def p_init_declarator(p):
@@ -1179,6 +1169,7 @@ def p_init_declarator(p):
 	'''
 	if (len(p)==4):
 		p[0] = Node("init_declarator", [p[1],p[3]], p[2])
+		p[0].value = p[3].value
 		instr.append(p[1].place + ' = ' + p[3].place)
 		# Pointer error eg : int **x=y; y is int*
 		if isinstance(p[1].type,list):
@@ -1205,6 +1196,8 @@ def p_init_declarator(p):
 			p[1].type='EMPTY'
 		p[0].type=p[1].type
 		
+	if len(func_type_list)>0:
+		func_type_list.pop()
 	p[0].name = 'init_declarator'
 
 def p_storage_class_specifier(p):
@@ -1297,7 +1290,7 @@ def p_struct_declaration(p):
 		if st.var_curr_scope_exists(x):
 			messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 		else:
-			st.make_var_entry(x,p[1].type)
+			st.make_var_entry(x,p[1].type,False,None)
 	p[0].type=p[1].type
 	p[0].name = 'struct_declaration'
 
@@ -1818,7 +1811,7 @@ def p_iteration_statement(p):
 	iteration_statement : WHILE OP label_m expression CP label_m statement label_n
 						| DO statement WHILE OP expression CP SEMICOLON
 						| FOR OP expression_statement expression_statement CP statement
-						| FOR OP expression_statement label_m expression_statement label_m expression label_n CP label_m statement label_n
+						| FOR OP expression SEMICOLON label_m expression SEMICOLON label_m expression label_n CP label_m statement label_n
 	'''
 	if len(p) == 9:
 		p[0] = Node('while', [p[4], p[7]], 'while')
@@ -1828,18 +1821,18 @@ def p_iteration_statement(p):
 		backpatch(p[4].truelist, p[6].quad)
 		p[0].nextlist = p[4].falselist
 
-	elif len(p) == 13:
+	elif len(p) == 15:
 		if (p[1] == 'for'):
-			p[0] = Node('for-with-update', [p[3], p[5], p[7],p[11]], 'for-with-update')
-			if (p[3].type == 'VOID' and p[5].type == 'VOID' and p[7].type != 'TYPE_ERROR'):
-				p[0].type = p[11].type
+			p[0] = Node('for-with-update', [p[3], p[6], p[9],p[13]], 'for-with-update')
+			if (p[3].type != 'TYPE_ERROR' and p[6].type != 'TYPE_ERROR' and p[9].type != 'TYPE_ERROR'):
+				p[0].type = p[13].type
 			else:
 				p[0].type = 'TYPE_ERROR'
-			backpatch(p[5].truelist, p[10].quad)
-			p[11].nextlist = p[12].nextlist
-			backpatch(p[12].nextlist, p[6].quad)
-			backpatch(p[8].nextlist, p[4].quad)
-			p[0].nextlist = p[5].falselist
+			backpatch(p[6].truelist, p[12].quad)
+			p[13].nextlist = p[14].nextlist
+			backpatch(p[14].nextlist, p[8].quad)
+			backpatch(p[10].nextlist, p[5].quad)
+			p[0].nextlist = p[6].falselist
 			
 	elif len(p) == 8:
 		p[0] = Node('do-while', [p[2], p[5]], 'do-while')
