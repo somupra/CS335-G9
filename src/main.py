@@ -7,7 +7,6 @@ from utlis import bfs, dfs
 import symbol_table as st 
 from errors.error import messages
 from parser.grammar import instr
-from codegen.codegen import assembly
 
 def main():
     import ply.lex as lex

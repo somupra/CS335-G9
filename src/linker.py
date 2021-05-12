@@ -89,6 +89,5 @@ def find_library(file):
     for path in search_paths:
         full = path.joinpath(file)
         if full.is_file():
-            print(path)
             return str(full)
     return None
