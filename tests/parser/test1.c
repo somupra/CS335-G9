@@ -1,4 +1,15 @@
-int f(int a, int b){
+int a = 10;
+int b;
+
+int main(){
+    int a = 10; 
+    int b = 100;
+    int c = a + b;
+    return c;
+}
+
+
+/*int f(int a, int b){
 	if(a < b || b >= a){
 		return 1;
 	}
@@ -7,7 +18,7 @@ int f(int a, int b){
 
 int main()
 {
-	int a ;
+	int a = 10 ;
 	int b ;
 	int i ;
 	int c ;
@@ -34,3 +45,4 @@ int main()
 	//b = a-1 ;
 	return 0;
 }
+*/

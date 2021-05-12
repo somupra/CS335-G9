@@ -1177,6 +1177,7 @@ def p_init_declarator(p):
 	'''
 	if (len(p)==4):
 		p[0] = Node("init_declarator", [p[1],p[3]], p[2])
+		instr.append(p[1].place + ' = ' + p[3].place)
 		# Pointer error eg : int **x=y; y is int*
 		if isinstance(p[1].type,list):
 			if  p[1].type[1]!=int(p[3].name[-1]):
@@ -1397,11 +1398,13 @@ def p_declarator(p):
 	if (len(p)==3):
 		p[0] = Node("declarator", [p[1],p[2]], None)
 		p[0].type = p[1].type
+		p[0].place = p[2].place
 		p[0].variables=p[2].variables
 		p[0].types_of_var.append(p[0].type)
 		func_name = p[0].variables[0]
 	else:
 		p[0] = p[1]
+		p[0].place = p[1].place
 		func_name = p[0].variables[0]
 	p[0].name = 'declarator'
 		
@@ -1418,6 +1421,7 @@ def p_direct_declarator(p):
 	if len(p)==2:
 		p[0] = Node("direct_declarator", None, p[1])
 		p[0].type = 'EMPTY'
+		p[0].place = p[1]
 		p[0].variables.append(p[1])
 		p[0].types_of_var.append('EMPTY')
 	elif p[1]=='(':
@@ -1612,9 +1616,10 @@ def p_initializer(p):
 	if len(p)==5:
 		p[0] = Node('initializer', [p[2]],p[3])
 		p[0].type = p[2].type
-		p[0].place = p[1].place
-		p[0].truelist = p[1].truelist
-		p[0].falselist = p[1].falselist
+		p[0].place = p[2].place
+		p[0].truelist = p[2].truelist
+		p[0].falselist = p[2].falselist
+		p[0].name = 'initializer'
 	elif len(p)==4:
 		p[0] = p[2]
 		p[0].type = p[2].type
@@ -1625,6 +1630,9 @@ def p_initializer(p):
 	else:
 		p[0] = p[1]
 		p[0].type = p[1].type
+		p[0].place = p[1].place
+		p[0].truelist = p[1].truelist
+		p[0].falselist = p[1].falselist
 		p[0].name = 'initializer'
 		
 def p_initializer_list(p):
