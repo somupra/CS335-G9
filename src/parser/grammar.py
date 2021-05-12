@@ -1805,13 +1805,23 @@ def p_selection_statement(p):
 		p[6].nextlist = p[7].nextlist
 		p[0].nextlist = p[6].nextlist + p[10].nextlist
 	p[0].name = 'selection_statement'
+
+def p_emp_expression(p) : 
+	'''
+	emp_expression : 
+			| expression
+	'''
+	
+	if(len(p) == 1) :
+		p[0] = Node("emp_expr", None , None)
+	else : 
+		p[0] = p[1]
 	
 def p_iteration_statement(p):
 	'''
 	iteration_statement : WHILE OP label_m expression CP label_m statement label_n
 						| DO statement WHILE OP expression CP SEMICOLON
-						| FOR OP expression_statement expression_statement CP statement
-						| FOR OP expression SEMICOLON label_m expression SEMICOLON label_m expression label_n CP label_m statement label_n
+						| FOR OP emp_expression SEMICOLON label_m emp_expression SEMICOLON label_m emp_expression label_n CP label_m statement label_n
 	'''
 	if len(p) == 9:
 		p[0] = Node('while', [p[4], p[7]], 'while')
@@ -1820,30 +1830,22 @@ def p_iteration_statement(p):
 		backpatch(p[7].nextlist, p[3].quad)
 		backpatch(p[4].truelist, p[6].quad)
 		p[0].nextlist = p[4].falselist
-
+		
 	elif len(p) == 15:
-		if (p[1] == 'for'):
-			p[0] = Node('for-with-update', [p[3], p[6], p[9],p[13]], 'for-with-update')
-			if (p[3].type != 'TYPE_ERROR' and p[6].type != 'TYPE_ERROR' and p[9].type != 'TYPE_ERROR'):
-				p[0].type = p[13].type
-			else:
-				p[0].type = 'TYPE_ERROR'
-			backpatch(p[6].truelist, p[12].quad)
-			p[13].nextlist = p[14].nextlist
-			backpatch(p[14].nextlist, p[8].quad)
-			backpatch(p[10].nextlist, p[5].quad)
-			p[0].nextlist = p[6].falselist
-			
+		p[0] = Node('for-with-update', [p[3], p[6], p[9],p[13]], 'for-with-update')
+		if (p[3].type != 'TYPE_ERROR' and p[6].type != 'TYPE_ERROR' and p[9].type != 'TYPE_ERROR'):
+			p[0].type = p[13].type
+		else:
+			p[0].type = 'TYPE_ERROR'
+		backpatch(p[6].truelist, p[12].quad)
+		p[13].nextlist = p[14].nextlist
+		backpatch(p[14].nextlist, p[8].quad)
+		backpatch(p[10].nextlist, p[5].quad)
+		p[0].nextlist = p[6].falselist
+				
 	elif len(p) == 8:
 		p[0] = Node('do-while', [p[2], p[5]], 'do-while')
 		p[0].type = p[2].type
-
-	elif len(p) == 7:
-		p[0] = Node('for-no-update', [p[3], p[4],p[6]], 'for-no-update')
-		if (p[3].type == 'VOID' and p[4].type == 'VOID'):
-			p[0].type = p[6].type
-		else :
-					p[0].type = 'TYPE_ERROR'
 	p[0].name = 'iteration_statement'
 
 def p_jump_statement(p):
