@@ -204,8 +204,8 @@ def p_postfix_expression(p):
 	elif p[2]=='++':
 		p[0] = Node("postfix_expression", [p[1]], p[2])#7
 		if(p[1].type == 'INT' or p[1].type == 'FLOAT'):
-			p[0].type = p[1].type
-			p[0].size = size[p[0].type]
+			p[0].type = 'VOID'
+			p[0].size = 0
 			p[0].truelist = []
 			p[0].falselist = []
 			instr.append(p[1].place + ' = ' + p[1].place + ' + 1')	
@@ -216,8 +216,8 @@ def p_postfix_expression(p):
 	elif p[2]=='--':
 		p[0] = Node("postfix_expression", [p[1]], p[2])#8
 		if(p[1].type == 'INT' or p[1].type == 'FLOAT'):
-			p[0].type = p[1].type
-			p[0].size = size[p[0].type]
+			p[0].type = 'VOID'
+			p[0].size = 0
 			p[0].truelist = []
 			p[0].falselist = []
 			instr.append(p[1].place + ' = ' + p[1].place + ' - 1')
@@ -295,8 +295,8 @@ def p_unary_expression(p):
 	elif p[1]=='++':
 		p[0] = Node("unary_expression", [p[2]], p[1])
 		if(p[2].type == 'INT' or p[2].type == 'FLOAT'):
-			p[0].type = p[2].type
-			p[0].size = size[p[2].type]
+			p[0].type = 'VOID'
+			p[0].size = 0
 			p[0].truelist = []
 			p[0].falselist = []
 			instr.append(p[2].place + ' = ' + p[2].place + ' + 1')
@@ -307,8 +307,8 @@ def p_unary_expression(p):
 	elif p[1]=='--':
 		p[0] = Node("unary_expression", [p[2]], p[1])
 		if(p[2].type == 'INT' or p[2].type == 'FLOAT'):
-			p[0].type = p[2].type
-			p[0].size = size[p[2].type]
+			p[0].type = 'VOID'
+			p[0].size = 0
 			p[0].truelist = []
 			p[0].falselist = []
 			instr.append(p[2].place + ' = ' + p[2].place + ' - 1')
@@ -1811,7 +1811,7 @@ def p_iteration_statement(p):
 	iteration_statement : WHILE OP label_m expression CP label_m statement label_n
 						| DO statement WHILE OP expression CP SEMICOLON
 						| FOR OP expression_statement expression_statement CP statement
-						| FOR OP expression_statement label_m expression_statement label_m expression label_n CP label_m statement label_n
+						| FOR OP expression SEMICOLON label_m expression SEMICOLON label_m expression label_n CP label_m statement label_n
 	'''
 	if len(p) == 9:
 		p[0] = Node('while', [p[4], p[7]], 'while')
@@ -1821,18 +1821,18 @@ def p_iteration_statement(p):
 		backpatch(p[4].truelist, p[6].quad)
 		p[0].nextlist = p[4].falselist
 
-	elif len(p) == 13:
+	elif len(p) == 15:
 		if (p[1] == 'for'):
-			p[0] = Node('for-with-update', [p[3], p[5], p[7],p[11]], 'for-with-update')
-			if (p[3].type == 'VOID' and p[5].type == 'VOID' and p[7].type != 'TYPE_ERROR'):
-				p[0].type = p[11].type
+			p[0] = Node('for-with-update', [p[3], p[6], p[9],p[13]], 'for-with-update')
+			if (p[3].type != 'TYPE_ERROR' and p[6].type != 'TYPE_ERROR' and p[9].type != 'TYPE_ERROR'):
+				p[0].type = p[13].type
 			else:
 				p[0].type = 'TYPE_ERROR'
-			backpatch(p[5].truelist, p[10].quad)
-			p[11].nextlist = p[12].nextlist
-			backpatch(p[12].nextlist, p[6].quad)
-			backpatch(p[8].nextlist, p[4].quad)
-			p[0].nextlist = p[5].falselist
+			backpatch(p[6].truelist, p[12].quad)
+			p[13].nextlist = p[14].nextlist
+			backpatch(p[14].nextlist, p[8].quad)
+			backpatch(p[10].nextlist, p[5].quad)
+			p[0].nextlist = p[6].falselist
 			
 	elif len(p) == 8:
 		p[0] = Node('do-while', [p[2], p[5]], 'do-while')
