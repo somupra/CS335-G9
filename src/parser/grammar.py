@@ -30,6 +30,8 @@ class Node:
 		self.truelist = []
 		self.falselist = []
 		self.nextlist = []
+		self.breaklist = []
+		self.continuelist = []
 		self.offset = 0
 		self.ret = typex
 		self.param_list = []
@@ -1666,6 +1668,8 @@ def p_statement(p):
 	p[0].name = 'statement'
 	p[0].type= p[1].type
 	p[0].nextlist = p[1].nextlist
+	p[0].breaklist = p[1].breaklist
+	p[0].continuelist = p[1].continuelist
 
 def p_labeled_statement(p):
 	'''
@@ -1698,6 +1702,8 @@ def p_compound_statement(p):
 		p[0] = Node('compound_statement',[p[2]],'{}')
 		p[0].type = p[2].type
 		p[0].nextlist = p[2].nextlist
+		p[0].breaklist = p[2].breaklist
+		p[0].continuelist = p[2].continuelist
 		
 	elif len(p)==6:
 		p[0] = Node('compound_statement',[p[2],p[4]],'{}')
@@ -1706,6 +1712,8 @@ def p_compound_statement(p):
 		else:
 			p[0].type = 'VOID'
 		p[0].nextlist = p[4].nextlist
+		p[0].breaklist = p[4].breaklist
+		p[0].continuelist = p[4].continuelist
 		backpatch(p[2].nextlist, p[3].quad)
 	else:
 		p[0]=None
@@ -1751,6 +1759,8 @@ def p_statement_list(p):
 		p[0] = Node('stmt', [p[1]])
 		p[0].type = p[1].type
 		p[0].nextlist = p[1].nextlist
+		p[0].breaklist = p[1].breaklist
+		p[0].continuelist = p[1].continuelist
 	else:
 		p[0] = Node('stmt-list', [p[1], p[3]])
 		if (p[1].type == 'TYPE_ERROR' or p[3].type == 'TYPE_ERROR'):
@@ -1759,6 +1769,8 @@ def p_statement_list(p):
 			p[0].type = 'VOID'
 		p[0].nextlist = p[3].nextlist
 		backpatch(p[1].nextlist, p[2].quad)
+		p[0].breaklist = p[1].breaklist + p[3].breaklist
+		p[0].continuelist = p[1].continuelist + p[3].continuelist
 	p[0].name = 'statement_list'
 
 def p_expression_statement(p):
@@ -1784,12 +1796,14 @@ def p_selection_statement(p):
 						| IF OP expression CP label_m statement label_n ELSE label_m statement
 						| SWITCH OP expression CP statement
 	'''
-	if len(p) == 7: 
-		if (p[1] == 'if') :
-						p[0] = Node('if-then', [p[3], p[6]], "if")
-						p[0].type = p[6].type               
-						backpatch(p[3].truelist, p[5].quad)
-						p[0].nextlist = p[3].falselist + p[6].nextlist
+	if (len(p) == 7):
+		p[0] = Node('if-then', [p[3], p[6]], "if")
+		p[0].type = p[6].type               
+		backpatch(p[3].truelist, p[5].quad)
+		p[0].nextlist = p[3].falselist + p[6].nextlist
+		p[0].breaklist = p[6].breaklist 	
+		p[0].continuelist = p[6].continuelist
+		
 	elif (len(p) == 6):
 		p[0] = Node('switch', [p[3], p[5]], 'switch')
 		p[0].type = p[5].type
@@ -1802,8 +1816,12 @@ def p_selection_statement(p):
 			p[0].type = 'VOID'
 		backpatch(p[3].truelist, p[5].quad)
 		backpatch(p[3].falselist, p[9].quad)
-		p[6].nextlist = p[7].nextlist
+		p[6].nextlist = p[6].nextlist + p[7].nextlist
+		p[7].nextlist = p[6].nextlist
 		p[0].nextlist = p[6].nextlist + p[10].nextlist
+		p[0].breaklist = p[6].breaklist + p[10].breaklist
+		p[0].continuelist = p[6].continuelist + p[10].continuelist
+		
 	p[0].name = 'selection_statement'
 
 def p_emp_expression(p) : 
@@ -1820,16 +1838,26 @@ def p_emp_expression(p) :
 def p_iteration_statement(p):
 	'''
 	iteration_statement : WHILE OP label_m expression CP label_m statement label_n
-						| DO statement WHILE OP expression CP SEMICOLON
+						| DO label_m statement label_n WHILE OP label_m expression CP SEMICOLON
 						| FOR OP emp_expression SEMICOLON label_m emp_expression SEMICOLON label_m emp_expression label_n CP label_m statement label_n
 	'''
 	if len(p) == 9:
 		p[0] = Node('while', [p[4], p[7]], 'while')
 		p[0].type = p[7].type
+		p[8].nextlist = p[7].nextlist + p[8].nextlist + p[7].continuelist
 		p[7].nextlist = p[8].nextlist
 		backpatch(p[7].nextlist, p[3].quad)
 		backpatch(p[4].truelist, p[6].quad)
-		p[0].nextlist = p[4].falselist
+		p[0].nextlist = p[4].falselist + p[7].breaklist
+	
+	elif len(p) == 11:
+		p[0] = Node('do-while', [p[3], p[8]], 'do-while')
+		p[0].type = p[3].type
+		p[3].nextlist = p[3].nextlist + p[4].nextlist + p[3].continuelist
+		p[4].nextlist = p[3].nextlist
+		backpatch(p[4].nextlist, p[7].quad)
+		backpatch(p[8].truelist, p[2].quad)
+		p[0].nextlist = p[8].falselist + p[3].breaklist
 		
 	elif len(p) == 15:
 		p[0] = Node('for-with-update', [p[3], p[6], p[9],p[13]], 'for-with-update')
@@ -1838,28 +1866,31 @@ def p_iteration_statement(p):
 		else:
 			p[0].type = 'TYPE_ERROR'
 		backpatch(p[6].truelist, p[12].quad)
-		p[13].nextlist = p[14].nextlist
+		p[13].nextlist = p[13].nextlist + p[14].nextlist + p[13].continuelist
+		p[14].nextlist = p[13].nextlist
 		backpatch(p[14].nextlist, p[8].quad)
 		backpatch(p[10].nextlist, p[5].quad)
-		p[0].nextlist = p[6].falselist
-				
-	elif len(p) == 8:
-		p[0] = Node('do-while', [p[2], p[5]], 'do-while')
-		p[0].type = p[2].type
+		p[0].nextlist = p[6].falselist + p[13].breaklist		
 	p[0].name = 'iteration_statement'
 
 def p_jump_statement(p):
 	'''
 	jump_statement : GOTO ID SEMICOLON
-				   | CONTINUE SEMICOLON
-				   | BREAK SEMICOLON
+				   | CONTINUE label_n SEMICOLON
+				   | BREAK label_n SEMICOLON
 				   | RETURN SEMICOLON
 				   | RETURN expression SEMICOLON
 	'''
 	if len(p) == 4:
-		if p[1] == 'goto':
-			p[0] = Node('goto', p[2], "goto") #CHECKK
+		if (p[1] == 'goto'):
+			p[0] = Node('goto', p[2], "goto")
 			st.add_goto_ref(p[2],p.lineno(2))
+		elif(p[1] == 'break'): 
+			p[0] = Node('break', None, 'break')
+			p[0].breaklist = p[2].nextlist
+		elif (p[1] == 'continue'): 
+			p[0] = Node('continue', None, 'continue')
+			p[0].continuelist = p[2].nextlist
 		else:
 			p[0] = Node('return', [p[2]], "return")
 			instr.append("return " + p[2].ret)
@@ -1871,8 +1902,6 @@ def p_jump_statement(p):
 					else:
 						messages.add(f'Error at line {p.lineno(1)}: Does not match function return type')
 	else:
-		if p[1] == 'continue': p[0] = Node('continue', None, 'continue')
-		if p[1] == 'break': p[0] = Node('break', None, 'break')
 		if p[1] == 'return': 
 			p[0] = Node('return', None, 'return')
 			instr.append("return")

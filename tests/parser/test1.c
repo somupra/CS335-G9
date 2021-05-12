@@ -1,11 +1,12 @@
 int main(){
-	int i = 0; 
+	int i ; 
 	int a = 5;
-	/*for(i=0 ; i<10 ; i++){
-		a++ ;
-	}*/
-	for(; i<10 || i>15 ; i++){
-		a++ ;
-	}
+	int b ;
+	for(i=0 ; i<10 ; i++){
+		a = a+1 ;
+		if(a==8){
+			continue ;
+		}
+	}	
 	return 0 ;
 }
