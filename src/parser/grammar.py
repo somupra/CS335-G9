@@ -33,13 +33,14 @@ class Node:
 		self.offset = 0
 		self.ret = typex
 		self.param_list = []
-		self.value = 'undefined' #To store constants, for array size, say, a[10]
+		self.value = None #To store constants, for array size, say, a[10]
+		self.values_of_var = []
 		
 def newvar(tt):
 	global counter
 	counter = counter + 1
 	name = 'tmp@' + str(counter)
-	st.make_var_entry(name, tt)
+	st.make_var_entry(name, tt, False, None)
 	return name
 	
 def backpatch(lists, quad):
@@ -131,6 +132,7 @@ def p_char_const(p):
 	p[0].truelist = []
 	p[0].falselist = []
 	p[0].ret = p[1]
+	p[0].value = p[1][1:-1]
 	
 def p_string(p):
 	'''
@@ -174,6 +176,7 @@ def p_float(p):
 	p[0].truelist = []
 	p[0].falselist = []
 	p[0].ret = p[1]
+	p[0].value = float(p[1])
 	
 def p_postfix_expression(p):
 	'''
@@ -1093,7 +1096,10 @@ def p_declaration(p):
 				if st.var_curr_scope_exists(p[2].variables[i]):
 					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 				else:
-					st.make_var_entry(p[2].variables[i],p[1].type)
+					if p[2].values_of_var[i]==None:
+						st.make_var_entry(p[2].variables[i],p[1].type,False,None)
+					else:
+						st.make_var_entry(p[2].variables[i],p[1].type,True,p[2].values_of_var[i])
 				p[2].types_of_var[i] = p[1].type
 
 			elif p[2].types_of_var[i][0:8]=='pointer_':
@@ -1102,14 +1108,20 @@ def p_declaration(p):
 					if st.var_curr_scope_exists(p[2].variables[i]):
 						messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 					else:
-						st.make_var_entry(p[2].variables[i],p[2].types_of_var[i]+p[1].type)
+						if p[2].values_of_var[i]==None:
+							st.make_var_entry(p[2].variables[i],p[2].types_of_var[i]+p[1].type,False,None)
+						else:
+							st.make_var_entry(p[2].variables[i],p[2].types_of_var[i]+p[1].type,True,p[2].values_of_var[i])
 					p[2].types_of_var[i]=p[2].types_of_var[i]+p[1].type
 
 				elif p[2].types_of_var[i][-len(p[1].type):]==p[1].type:#Pointer type matched
 					if st.var_curr_scope_exists(p[2].variables[i]):
 						messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 					else:
-						st.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
+						if p[2].values_of_var[i]==None:
+							st.make_var_entry(p[2].variables[i],p[2].types_of_var[i],False,None)
+						else:
+							st.make_var_entry(p[2].variables[i],p[2].types_of_var[i],True,p[2].values_of_var[i])
 				else:
 					#print(p[2].variables[i],p[2].types_of_var[i])
 					messages.add(f'Error at line {p.lineno(2)}: TYPE ERROR IN POINTER DECLARATION')
@@ -1119,7 +1131,7 @@ def p_declaration(p):
 				if st.var_curr_scope_exists(p[2].variables[i]):
 					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 				else:
-					st.make_var_entry(p[2].variables[i],p[2].types_of_var[i])
+					st.make_var_entry(p[2].variables[i],p[2].types_of_var[i],False,None)
 
 			elif p[1].type!=p[2].types_of_var[i]:
 				messages.add(f'Error at line {p.lineno(2)}: TYPE ERROR IN DECLARATION')
@@ -1130,7 +1142,10 @@ def p_declaration(p):
 				if st.var_curr_scope_exists(p[2].variables[i]):
 					messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 				else:
-					st.make_var_entry(p[2].variables[i],p[1].type)
+						if p[2].values_of_var[i]==None:
+							st.make_var_entry(p[2].variables[i],p[1].type,False,None)
+						else:
+							st.make_var_entry(p[2].variables[i],p[1].type,True,p[2].values_of_var[i])
 		p[0].type=p[1].type
 		p[0].nextlist = []
 	p[0].name = 'declaration'
@@ -1166,10 +1181,13 @@ def p_init_declarator_list(p):
 		p[0].types_of_var=p[1].types_of_var
 		p[0].variables+=p[3].variables
 		p[0].types_of_var+=p[3].types_of_var
+		p[0].values_of_var = p[1].values_of_var
+		p[0].values_of_var += p[3].value
 		if p[1].type!=p[3].type:
 			messages.add(f'Error at line {p.lineno(1)}: Type mismatch in declarator list')
 	else:
 		p[0] = p[1]
+		p[0].values_of_var.append(p[1].value)
 	p[0].name = 'init_declarator_list'	
 
 def p_init_declarator(p):
@@ -1179,6 +1197,7 @@ def p_init_declarator(p):
 	'''
 	if (len(p)==4):
 		p[0] = Node("init_declarator", [p[1],p[3]], p[2])
+		p[0].value = p[3].value
 		instr.append(p[1].place + ' = ' + p[3].place)
 		# Pointer error eg : int **x=y; y is int*
 		if isinstance(p[1].type,list):
@@ -1205,6 +1224,8 @@ def p_init_declarator(p):
 			p[1].type='EMPTY'
 		p[0].type=p[1].type
 		
+	if len(func_type_list)>0:
+		func_type_list.pop()
 	p[0].name = 'init_declarator'
 
 def p_storage_class_specifier(p):
@@ -1297,7 +1318,7 @@ def p_struct_declaration(p):
 		if st.var_curr_scope_exists(x):
 			messages.add(f'Error at line {p.lineno(2)}: Redeclaration')
 		else:
-			st.make_var_entry(x,p[1].type)
+			st.make_var_entry(x,p[1].type,False,None)
 	p[0].type=p[1].type
 	p[0].name = 'struct_declaration'
 
