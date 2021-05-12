@@ -203,38 +203,24 @@ def p_postfix_expression(p):
 		p[0] = Node("postfix_expression", [p[3]], p[1])
 	elif p[2]=='++':
 		p[0] = Node("postfix_expression", [p[1]], p[2])#7
-		if(p[1].type == 'INT' or p[1].type == 'FLOAT' or p[1].type == 'CHAR' or p[1].type == 'BOOL'):
-			p[0].type = 'INT'
-			p[0].size = 4
+		if(p[1].type == 'INT' or p[1].type == 'FLOAT'):
+			p[0].type = p[1].type
+			p[0].size = size[p[0].type]
 			p[0].truelist = []
 			p[0].falselist = []
-			if(p[1].type == 'INT'):
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + p[1].place + ' + 1')
-			else:
-				x = newvar('INT')
-				instr.append(x + ' = ' + 'to_int' + '(' + p[1].place + ')')
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + x + ' + 1')
+			instr.append(p[1].place + ' = ' + p[1].place + ' + 1')	
 		else:
 			p[0].type = 'TYPE_ERROR'
 			p[0].size = 0
 			messages.add(f'Error at line {p.lineno(2)} : Cannot use operator {str(p[2])} with type {str(p[1].type)}')
 	elif p[2]=='--':
 		p[0] = Node("postfix_expression", [p[1]], p[2])#8
-		if(p[1].type == 'INT' or p[1].type == 'FLOAT' or p[1].type == 'CHAR' or p[1].type == 'BOOL'):
-			p[0].type = 'INT'
-			p[0].size = 4
+		if(p[1].type == 'INT' or p[1].type == 'FLOAT'):
+			p[0].type = p[1].type
+			p[0].size = size[p[0].type]
 			p[0].truelist = []
 			p[0].falselist = []
-			if(p[1].type == 'INT'):
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + p[1].place + ' - 1')
-			else:
-				x = newvar('INT')
-				instr.append(x + ' = ' + 'to_int' + '(' + p[1].place + ')')
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + x + ' - 1')
+			instr.append(p[1].place + ' = ' + p[1].place + ' - 1')
 		else:
 			p[0].type = 'TYPE_ERROR'
 			p[0].size = 0
@@ -308,38 +294,24 @@ def p_unary_expression(p):
 		p[0].ret = p[1].ret
 	elif p[1]=='++':
 		p[0] = Node("unary_expression", [p[2]], p[1])
-		if(p[2].type == 'INT' or p[2].type == 'FLOAT' or p[2].type == 'CHAR' or p[2].type == 'BOOL'):
-			p[0].type = 'INT'
-			p[0].size = 4
+		if(p[2].type == 'INT' or p[2].type == 'FLOAT'):
+			p[0].type = p[2].type
+			p[0].size = size[p[2].type]
 			p[0].truelist = []
 			p[0].falselist = []
-			if(p[2].type == 'INT'):
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + p[2].place + ' + 1')
-			else:
-				x = newvar('INT')
-				instr.append(x + ' = ' + 'to_int' + '(' + p[2].place + ')')
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + x + ' + 1')
+			instr.append(p[2].place + ' = ' + p[2].place + ' + 1')
 		else:
 			p[0].type = 'TYPE_ERROR'
 			p[0].size = p[2].size
 			messages.add(f'Error at line {p.lineno(1)} : Cannot use operator {str(p[1])} with type {str(p[2].type)}')
 	elif p[1]=='--':
 		p[0] = Node("unary_expression", [p[2]], p[1])
-		if(p[2].type == 'INT' or p[2].type == 'FLOAT' or p[2].type == 'CHAR' or p[2].type == 'BOOL'):
-			p[0].type = 'INT'
-			p[0].size = 4
+		if(p[2].type == 'INT' or p[2].type == 'FLOAT'):
+			p[0].type = p[2].type
+			p[0].size = size[p[2].type]
 			p[0].truelist = []
 			p[0].falselist = []
-			if(p[2].type == 'INT'):
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + p[2].place + ' - 1')
-			else:
-				x = newvar('INT')
-				instr.append(x + ' = ' + 'to_int' + '(' + p[2].place + ')')
-				p[0].place = newvar('INT')
-				instr.append(p[0].place + ' = ' + x + ' - 1')
+			instr.append(p[2].place + ' = ' + p[2].place + ' - 1')
 		else:
 			p[0].type = 'TYPE_ERROR'
 			p[0].size = p[2].size

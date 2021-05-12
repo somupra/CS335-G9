@@ -1,13 +1,11 @@
-int a = 10;
-int b;
 
 int main(){
-    int a = 10; 
-    int b = 100;
-    int c = a + b;
-    return c;
+	int i=0 ; 
+	for(i=0 ; i<100 ; ){
+		i++ ;
+	}
+	return 0 ;
 }
-
 
 /*int f(int a, int b){
 	if(a < b || b >= a){
