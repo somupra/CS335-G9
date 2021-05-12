@@ -11,3 +11,4 @@ parser.out
 *.asm
 mytest.c
 *.s
+out

@@ -1,4 +1,6 @@
 import pydot
+import subprocess
+import pathlib
 from lexer import lexrules
 from parser.grammar import parser
 from utlis import bfs, dfs
@@ -62,7 +64,25 @@ def main():
             cnt = cnt+1
 
     from codegen.codegen import assemble
-    assemble(to_asm)
+    asm = assemble(to_asm)
+
+    # print to asm file
+    asm_lines = asm.full_code()
+    with open("src/assembly.s", "w") as asm_file:
+        for line in asm_lines:
+            asm_file.write(line)
+
+    from linker import assemble_to_obj, link
+    obj = "src/assembly.o"
+    assemble_to_obj("src/assembly.s", obj)
+
+    if not link("out", [obj]):
+        print("linker returned non-zero status")
+        return 1
+    return 0
+
+
+
 
 if __name__ == "__main__":
     main()
