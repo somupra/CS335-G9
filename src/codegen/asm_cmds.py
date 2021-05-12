@@ -14,12 +14,37 @@ class _ASMCommand:
     This class is used for ASM commands which take arguments of the same
     size.
     """
+    reg_map = {
+            "rax": 	["rax", "eax", "ax", "al"],
+            "rbx": 	["rbx", "ebx", "bx", "bl"],
+            "rcx": 	["rcx", "ecx", "cx", "cl"],
+            "rdx": 	["rdx", "edx", "dx", "dl"],
+            "rsi": 	["rsi", "esi", "si", "sil"],
+            "rdi": 	["rdi", "edi", "di", "dil"],
+            "r8": 	["r8", "r8d", "r8w", "r8b"],
+            "r9": 	["r9", "r9d", "r9w", "r9b"],
+            "r10": 	["r10", "r10d", "r10w", "r10b"],
+            "r11": 	["r11", "r11d", "r11w", "r11b"],
+            "rbp": 	["rbp", "ebp", "", ""],
+            "rsp": 	["rsp", "esp", "", ""]
+        }
 
     name = None
+    dest = None 
+    source = None 
+    size = None 
 
     def __init__(self, dest=None, source=None, size=None):
-        self.dest = dest.asm_str(size) if dest else None
-        self.source = source.asm_str(size) if source else None
+        size_map = {
+            1: 3,
+            2: 2,
+            4: 1,
+            8: 0
+        }
+        if dest and dest not in self.reg_map.keys(): self.dest = str(dest)
+        elif dest: self.dest = self.reg_map[dest][size_map[size]]
+        if source and source not in self.reg_map.keys(): self.source = str(source)
+        elif source: self.source = self.reg_map[source][size_map[size]]
         self.size = size
 
     def __str__(self):
