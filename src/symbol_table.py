@@ -191,9 +191,11 @@ def check_in_structures(name):
 	return None # Not found
 
 
-def make_var_entry(name,type):
+def make_var_entry(name,type,init,value):
 	allsymboltables[symtabtrack[-1]].variables[name]={}
 	allsymboltables[symtabtrack[-1]].variables[name]["type"]=type
+	allsymboltables[symtabtrack[-1]].variables[name]["init"]=init
+	allsymboltables[symtabtrack[-1]].variables[name]["value"]=value
 	
 	global offset
 	if isinstance(type,list):
