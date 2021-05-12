@@ -206,6 +206,29 @@ class AsmCode:
 
 import symbol_table as st
 
+# based on the size of the arg, suitable reg will be allocated
+reg_map = {
+			"rax": 	["rax", "eax", "ax", "al"],
+			"rbx": 	["rbx", "ebx", "bx", "bl"],
+			"rcx": 	["rcx", "ecx", "cx", "cl"],
+			"rdx": 	["rdx", "edx", "dx", "dl"],
+			"rsi": 	["rsi", "esi", "si", "sil"],
+			"rdi": 	["rdi", "edi", "di", "dil"],
+			"r8": 	["r8", "r8d", "r8w", "r8b"],
+			"r9": 	["r9", "r9d", "r9w", "r9b"],
+			"r10": 	["r10", "r10d", "r10w", "r10b"],
+			"r11": 	["r11", "r11d", "r11w", "r11b"],
+			"rbp": 	["rbp", "", "", ""],
+			"rsp": 	["rsp", "", "", ""]
+		}
+# to keep the track of the regs, if None then reg is free and can
+# be allocated. Otherwise, free the reg to the memspot on the stack
+reg_track = {}
+for reg_list in reg_map.values():
+	for reg in reg_list:
+		if reg != "": reg_track[reg] = None
+
+
 def assemble(code_3ac):
 	asm = AsmCode()
 	# add global
