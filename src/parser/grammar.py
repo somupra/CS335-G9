@@ -103,6 +103,8 @@ def p_id(p):
 	if x==None:
 		p[0].type = 'EMPTY'
 		p[0].size = 0
+		if st.checkscope()!=0 and p[1]!='printf':
+			messages.add(f'Error at line {p.lineno(1)} : Variable not declared')
 	else:
 		if isinstance(x,str):
 			p[0].type = x
