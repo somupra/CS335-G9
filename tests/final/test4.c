@@ -1,18 +1,11 @@
-
 int main(){
-	int a, b, c, d, e ;
-	d = 5;
-	e = 5;
-	a = 7 ;
-	b = a ;
-	do{
-		b = a+1 ;
-		a++ ;
-		c = b*a ;
-		d = b/a ;
-		e = c%d ;
-		printf("%d, %d, %d\n", c, d, e) ;
-	}
-	while(a<10) ;
-	return 0 ;
+    int a = 10;
+    int b = 20;
+    int c = 30;
+    for(; a <= c; a++){
+        if(a >= b){
+            printf("val of a: %d\n", a);
+        }
+    }
+    return 0;
 }
