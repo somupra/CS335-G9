@@ -1,3 +1,4 @@
+from sys import argv
 import pydot
 import subprocess
 import pathlib
@@ -16,6 +17,7 @@ def main():
     import sys
  
     filename = sys.argv[1]
+    show_asm = sys.argv[2] if len(sys.argv) == 3 else None
 
     with open(sys.argv[1]) as f:
         input = f.read()
@@ -45,6 +47,8 @@ def main():
     st.give_out(filename)
 
     
+
+    print("\n\n\n ------------------ 3AC CODE --------------------")
     curr_func = "@global"
     to_asm = {curr_func: []}
     cnt = 0
@@ -62,6 +66,8 @@ def main():
             print("\t", [cnt, instr[i]])
             cnt = cnt+1
 
+    if not show_asm: return 0
+    
     from codegen.codegen import assemble
     asm = assemble(to_asm)
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 test () {
 	printf "\n\nFINAL TEST $1 RESULTS \n"
-	python ./src/main.py tests/final/test$1.c >> dump.txt
+	python ./src/main.py tests/final/test$1.c 1 >> dump.txt
 	./out
 }
 
