@@ -78,11 +78,14 @@ for reg_list in reg_map.values():
     for reg in reg_list:
         if reg != "": reg_track[reg] = None
 
-def process(lines, var_info, asm, strlit_map):
+def process(lines, var_info, asm, strlit_map, labels):
     ops = ['return', 'param', 'if']
     param_num = 0
     for line in lines:
         lno = line[0]
+        # this is a labeled line someone might goto here
+        if str(lno) in labels.keys(): asm.add(asm_cmds.Label(labels[str(lno)]))
+
         cmd_toks = line[1].split()
 
         # expressions
@@ -126,8 +129,7 @@ def process(lines, var_info, asm, strlit_map):
                 if cmd_toks[3] == "/": # divison
                     asm.add(asm_cmds.Comment("Divison Code"))
                     asm.add(asm_cmds.Idiv(op1_reg, op2_reg, 8))
-                
-        
+                       
         if cmd_toks[0] == 'return':
             ret_val = cmd_toks[1]
             asm.add(asm_cmds.Comment(f"RETURN {ret_val}"))
@@ -184,7 +186,42 @@ def process(lines, var_info, asm, strlit_map):
             asm.add(asm_cmds.Lea("rax", f"[{fname}]"))
             asm.add(asm_cmds.Call("rax", None, 8))
 
-                    
+        if cmd_toks[0] == "if":
+            asm.add(asm_cmds.Comment("Comparison"))
+            cond = line[1][4: line[1].find("}")]
+            goto = line[1][line[1].rfind("{") + 1 : -1]
+
+            # step 2: cmp cond, cond will always have two operands
+            # cmp will always happen between esi and edi regs
+            reg_spill("esi", var_info, asm, reg_track)
+            reg_spill("edi", var_info, asm, reg_track)
+
+            op1, comp, op2 = cond.split()[0], cond.split()[1], cond.split()[2]
+            
+            op1_reg = get_empty_reg(op1, var_info, asm, "esi", reg_track)
+            move_val_to_reg(op1_reg, op1, var_info, asm, reg_track)
+            
+            op2_reg = get_empty_reg(op2, var_info, asm, "edi", reg_track)
+            move_val_to_reg(op2_reg, op2, var_info, asm, reg_track)
+
+            asm.add(asm_cmds.Cmp("esi", "edi", 8))
+            if comp == ">": asm.add(asm_cmds.Jg(labels[goto]))
+            if comp == ">=": asm.add(asm_cmds.Jge(labels[goto]))
+            if comp == "<": asm.add(asm_cmds.Jl(labels[goto]))
+            if comp == "<=": asm.add(asm_cmds.Jle(labels[goto]))
+            if comp == "==": asm.add(asm_cmds.Je(labels[goto]))
+            if comp == "!=": asm.add(asm_cmds.Jne(labels[goto]))
+
+
+        if cmd_toks[0] == "goto":
+            goto = cmd_toks[1][1:-1]
+            asm.add(asm_cmds.Comment("Jump to label"))
+            asm.add(asm_cmds.Jmp(labels[goto]))
+
+                
+
+
+
 
 
 
@@ -232,6 +269,20 @@ def assemble(code_3ac):
         strlit_ascii.append(0)
 
         asm.add_string_literal(strlit_map[strlit], strlit_ascii)
+
+    # get all the labels (among all the functions)
+    labels = {}
+    for fn_code in code_3ac.values():
+        for cmd in fn_code:
+            cmd_toks = cmd[1].split()
+            if cmd_toks[0] == 'goto':
+                goto = cmd_toks[1][1:-1]
+                labels[goto] = "__label__" + str(goto)
+                continue
+            if cmd_toks[0] == 'if':
+                goto = cmd[1][cmd[1].rfind("{") + 1 : -1]
+                labels[goto] = "__label__" + str(goto)
+
        
 
     # process the code_3ac lines
@@ -252,7 +303,7 @@ def assemble(code_3ac):
         var_info = st.get_var_info(fname)
 
         # process lines
-        process(code_3ac[fname], var_info, asm, strlit_map)
+        process(code_3ac[fname], var_info, asm, strlit_map, labels)
 
 
         # register allocation

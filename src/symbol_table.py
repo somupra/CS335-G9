@@ -188,9 +188,18 @@ def get_max_fn_offset(fname):
             max_offset += 16 - max_offset % 16
     return max_offset
 
+def traverse(sym_tab, vars):
+    vars = {**vars, **(sym_tab.variables)}
+    for child in sym_tab.child_idx:
+        vars = {**vars, **(allsymboltables[child].variables)}
+        traverse(allsymboltables[child], vars)
+    return vars
+
+
 def get_var_info(fname):
     fn_symtab = allsymboltables[check_in_fs(fname)[0]]
-    return fn_symtab.variables
+    vars = traverse(fn_symtab, {})
+    return vars
 
 def check_in_structures(name):
     curr_table = allsymboltables[symtabtrack[-1]]
