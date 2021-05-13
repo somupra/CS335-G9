@@ -23,12 +23,21 @@ size_map = {
     8: "QWORD PTR "
 }
 
+def move_reg_to_memory(rname, var_info, asm, reg_track):
+    rval = reg_track[rname]
+    rsize = var_info[rval]["size"]
+    rval_offset = var_info[rval]["offset"] + rsize
+    asm.add(asm_cmds.Comment(f"Move reg data to mem: {rname} -> mem {rval}"))
+    asm.add(asm_cmds.Mov(f"{size_map[rsize]}[rbp - {rval_offset}]", rname, 8))
+
 def reg_spill(rname, var_info, asm, reg_track):
     # if reg is already empty then do nothing
     if reg_track[rname] == None: return
 
     rval = reg_track[rname]
-    if rval not in var_info.keys(): return
+    if rval not in var_info.keys(): 
+        reg_track[rname] = None
+        return
 
     rsize = var_info[rval]["size"]
     rval_offset = var_info[rval]["offset"] + rsize
@@ -40,35 +49,40 @@ def reg_spill(rname, var_info, asm, reg_track):
     reg_track[rname] = None
 
 def move_from_mem_to_reg(reg, var, var_info, asm, reg_track):
+    asm.add(asm_cmds.Comment(f"Load reg from mem {var}"))
+    if var not in var_info.keys(): 
+        asm.add(asm_cmds.Mov(reg, var, 8))
+        return
     var_size = var_info[var]["size"]
     var_offset = var_info[var]["offset"] + var_size
     asm.add(asm_cmds.Mov(reg, f"{size_map[var_size]}[rbp - {var_offset}]", 8))
 
-def get_reg_for(val, var_info, asm, reg_track):
+def get_reg_for(val, var_info, asm, reg_track, pref):
     # if val is constant, return it
     if val not in var_info.keys(): return val
 
     # check if a live register is there
     for reg, v in reg_track.items():
-        if v == val: return reg
+        if v == val: 
+            move_from_mem_to_reg(reg, val, var_info, asm, reg_track)
+            return reg
     
     # no live reg for val, assign new reg if empty
     priority = ["eax", "ebx", "ecx", "edx", "esi", "edi"]
     for reg in priority:
         if reg_track[reg] == None:
             reg_track[reg] = val
+            move_from_mem_to_reg(reg, val, var_info, asm, reg_track)
             return reg
     
     # all regs are filled, spill a reg and allocate it to val
-    # we will spill eax always
-    reg_spill("eax", var_info, asm, reg_track)
-    reg_track["eax"] = val 
-
-    # allocate eax to val
-    move_from_mem_to_reg("eax", val, var_info, asm, reg_track)
-    return "eax"
+    # we will spill acc to pref
+    reg = get_empty_reg(val, var_info, asm, pref, reg_track)
+    move_from_mem_to_reg(pref, val, var_info, asm, reg_track)
+    return pref
 
 def get_empty_reg(var, var_info, asm, rname, reg_track):
+    if reg_track[rname] == var: return rname
     reg_spill(rname, var_info, asm, reg_track)
     reg_track[rname] = var
     return rname
@@ -102,3 +116,8 @@ def assign_reg_to_var(sreg, var, var_info, asm, reg_track):
     var_offset = var_info[var]["offset"] + var_size
     asm.add(asm_cmds.Comment(f"Assign reg to variable: {var}"))
     asm.add(asm_cmds.Mov(f"{size_map[var_size]}[rbp - {var_offset}]", sreg, 8))
+
+def mov_const_to_memory(const, var, var_info, asm):
+    var_size = var_info[var]["size"]
+    var_offset = var_info[var]["offset"] + var_size
+    asm.add(asm_cmds.Mov(f"{size_map[var_size]}[rbp - {var_offset}]", const, 8))

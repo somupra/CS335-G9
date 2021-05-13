@@ -69,8 +69,7 @@ class AsmCode:
     
 import symbol_table as st
 import codegen.asm_cmds as asm_cmds
-from codegen.regs import reg_map, get_empty_reg, get_reg_for, move_from_mem_to_reg, move_val_to_reg, assign_reg_to_var, reg_spill
-
+from codegen.regs import move_reg_to_memory, reg_map, get_empty_reg, get_reg_for, move_from_mem_to_reg, move_val_to_reg, assign_reg_to_var, reg_spill, mov_const_to_memory
 # to keep the track of the regs, if None then reg is free and can
 # be allocated. Otherwise, free the reg to the memspot on the stack
 reg_track = {}
@@ -79,7 +78,7 @@ for reg_list in reg_map.values():
         if reg != "": reg_track[reg] = None
 
 def process(lines, var_info, asm, strlit_map, labels):
-    ops = ['return', 'param', 'if']
+    ops = ['return', 'param', 'if', 'call', 'goto']
     param_num = 0
     for line in lines:
         lno = line[0]
@@ -94,25 +93,30 @@ def process(lines, var_info, asm, strlit_map, labels):
                 asm.add(asm_cmds.Comment("Assignment Code"))
                 lval = cmd_toks[0]
                 rval = cmd_toks[2]
-                lreg = get_reg_for(lval, var_info, asm, reg_track)
+                if rval not in var_info.keys():
+                    mov_const_to_memory(rval, lval, var_info, asm)
+                    continue
+
+                lreg = get_reg_for(lval, var_info, asm, reg_track, pref="eax")
                 move_val_to_reg(lreg, rval, var_info, asm, reg_track)
-                # import pprint
-                # pp = pprint.PrettyPrinter(indent=4)
-                # pp.pprint(reg_track)
+                move_reg_to_memory(lreg, var_info, asm, reg_track)
             
             if len(cmd_toks) == 5 and cmd_toks[1] == '=': # binary operation
                 asm.add(asm_cmds.Comment("Binary Operation Code"))
                 op1 = cmd_toks[2]
                 op2 = cmd_toks[4]
 
-                # create a temp reg we will always take edx and mov op1 to it
-                op1_reg = get_empty_reg(cmd_toks[0], var_info, asm, "edx", reg_track)
-                move_val_to_reg(op1_reg, op1, var_info, asm, reg_track)
+                if cmd_toks[0] == op1:
+                    op1_reg = get_reg_for(op1, var_info, asm, reg_track, pref="edx")
+                    
+                else:
+                    # create a temp reg we will always take edx and mov op1 to it
+                    op1_reg = get_empty_reg(cmd_toks[0], var_info, asm, "edx", reg_track)
+                    move_from_mem_to_reg(op1_reg, op1, var_info, asm, reg_track)
 
                 # get reg for op2 and move op2 to it
                 op2_reg = get_empty_reg(op2, var_info, asm, "esi", reg_track)
-
-                move_val_to_reg(op2_reg, op2, var_info, asm, reg_track)
+                move_from_mem_to_reg(op2_reg, op2, var_info, asm, reg_track)
 
                 if cmd_toks[3] == "+": # addition
                     asm.add(asm_cmds.Comment("Addition Code"))
@@ -129,11 +133,19 @@ def process(lines, var_info, asm, strlit_map, labels):
                 if cmd_toks[3] == "/": # divison
                     asm.add(asm_cmds.Comment("Divison Code"))
                     asm.add(asm_cmds.Idiv(op1_reg, op2_reg, 8))
+                
+                # move op1_reg to memory now
+                move_reg_to_memory(op1_reg, var_info, asm, reg_track)
                        
         if cmd_toks[0] == 'return':
             ret_val = cmd_toks[1]
             asm.add(asm_cmds.Comment(f"RETURN {ret_val}"))
-            reg_spill("eax", var_info, asm, reg_track)
+
+            # before spilling read from memory, then spill, this prevents a dirty spill
+            if reg_track["eax"]:
+                move_from_mem_to_reg("eax", reg_track["eax"], var_info, asm, reg_track)
+                reg_spill("eax", var_info, asm, reg_track)
+
             move_val_to_reg("eax", ret_val, var_info, asm, reg_track)
             asm.add(asm_cmds.Mov("rsp", "rbp", 8)) # mov rsp, rbp
             asm.add(asm_cmds.Pop("rbp", None, 8)) # pop rbp
@@ -151,15 +163,12 @@ def process(lines, var_info, asm, strlit_map, labels):
 
             if callee not in st.allsymboltables[0].functions.keys():
                 arg_reg = reg_pref[param_num - 1]
-                # spill the arg reg
-                for reg in reg_map[arg_reg]:
-                    reg_spill(reg, var_info, asm, reg_track)
 
                 param_val = line[1][6: line[1].rfind(",")]
                 if param_val[0] == '\"': param_val = param_val[1:-1]
 
                 if param_val in strlit_map.keys():
-                    asm.add(asm_cmds.Comment("Address of symbol to arg register"))
+                    asm.add(asm_cmds.Comment("Address of var to arg register"))
                     asm.add(asm_cmds.Lea(arg_reg, f'[{strlit_map[param_val]}]'))
                 else:
                     scope = line[1][line[1].rfind("e")+1 : ]
@@ -173,7 +182,8 @@ def process(lines, var_info, asm, strlit_map, labels):
                     }
                     param_size = var_info[param_val]["size"]
                     arg_reg = reg_map[arg_reg][size_map[param_size]]
-                    move_val_to_reg(arg_reg, param_val, var_info, asm, reg_track)
+                    move_from_mem_to_reg(arg_reg, param_val, var_info, asm, reg_track)
+                    # move_val_to_reg(arg_reg, param_val, var_info, asm, reg_track)
 
         if cmd_toks[0] == "call":
             param_num = 0 # reset param_num variable
@@ -182,9 +192,16 @@ def process(lines, var_info, asm, strlit_map, labels):
             asm.add(asm_cmds.Comment(f"Function call for: {fname}"))
 
             for reg in reg_map["rax"]:
-                reg_spill(reg, var_info, asm, reg_track)
+                if reg_track[reg]:
+                    move_from_mem_to_reg(reg, reg_track[reg], var_info, asm, reg_track)
+                    reg_spill(reg, var_info, asm, reg_track)
+
             asm.add(asm_cmds.Lea("rax", f"[{fname}]"))
             asm.add(asm_cmds.Call("rax", None, 8))
+            print("after calling printf reg state: ", reg_track["eax"])
+            for reg, v in reg_track.items():
+                if v == "b":
+                    print("b is here: ", reg)
 
         if cmd_toks[0] == "if":
             asm.add(asm_cmds.Comment("Comparison"))
@@ -198,11 +215,9 @@ def process(lines, var_info, asm, strlit_map, labels):
 
             op1, comp, op2 = cond.split()[0], cond.split()[1], cond.split()[2]
             
-            op1_reg = get_empty_reg(op1, var_info, asm, "esi", reg_track)
-            move_val_to_reg(op1_reg, op1, var_info, asm, reg_track)
-            
-            op2_reg = get_empty_reg(op2, var_info, asm, "edi", reg_track)
-            move_val_to_reg(op2_reg, op2, var_info, asm, reg_track)
+            # in a loop, someone else might have clobbered the regs, so read directly from the memory
+            op1_reg = move_from_mem_to_reg("esi", op1, var_info, asm, reg_track)
+            op2_reg = move_from_mem_to_reg("edi", op2, var_info, asm, reg_track)
 
             asm.add(asm_cmds.Cmp("esi", "edi", 8))
             if comp == ">": asm.add(asm_cmds.Jg(labels[goto]))
@@ -212,24 +227,13 @@ def process(lines, var_info, asm, strlit_map, labels):
             if comp == "==": asm.add(asm_cmds.Je(labels[goto]))
             if comp == "!=": asm.add(asm_cmds.Jne(labels[goto]))
 
-
         if cmd_toks[0] == "goto":
             goto = cmd_toks[1][1:-1]
             asm.add(asm_cmds.Comment("Jump to label"))
             asm.add(asm_cmds.Jmp(labels[goto]))
 
-                
 
-
-
-
-
-
-            
-
-            
 def assemble(code_3ac):
-    print("\n", code_3ac)
     asm = AsmCode()
     
     # add global functions
