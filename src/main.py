@@ -67,15 +67,17 @@ def main():
 
     # print to asm file
     asm_lines = asm.full_code()
-    with open("src/assembly.s", "w") as asm_file:
+    asm_fname = filename[: -1] + "s"
+    obj_fname = filename[: -1] + "o"
+    with open(asm_fname, "w") as asm_file:
         for line in asm_lines:
             asm_file.write(line)
 
     from linker import assemble_to_obj, link
-    obj = "src/assembly.o"
-    assemble_to_obj("src/assembly.s", obj)
 
-    if not link("out", [obj]):
+    assemble_to_obj(asm_fname, obj_fname)
+
+    if not link("out", [obj_fname]):
         print("linker returned non-zero status")
         return 1
     return 0
