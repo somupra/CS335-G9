@@ -103,9 +103,6 @@ def p_id(p):
 	if x==None:
 		p[0].type = 'EMPTY'
 		p[0].size = 0
-		if st.checkscope()!=0:
-			print("\nvariable not declared error removed\n")
-			#messages.add(f'Error at line {p.lineno(1)} : Variable not declared')
 	else:
 		if isinstance(x,str):
 			p[0].type = x
@@ -1166,9 +1163,7 @@ def p_init_declarator_list(p):
 		p[0].variables+=p[3].variables
 		p[0].types_of_var+=p[3].types_of_var
 		p[0].values_of_var = p[1].values_of_var
-		p[0].values_of_var += p[3].value
-		if p[1].type!=p[3].type:
-			messages.add(f'Error at line {p.lineno(1)}: Type mismatch in declarator list')
+		p[0].values_of_var.append(p[3].value)
 	else:
 		p[0] = p[1]
 		p[0].values_of_var.append(p[1].value)
