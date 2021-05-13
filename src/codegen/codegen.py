@@ -69,7 +69,7 @@ class AsmCode:
     
 import symbol_table as st
 import codegen.asm_cmds as asm_cmds
-from codegen.regs import move_reg_to_memory, reg_map, get_empty_reg, get_reg_for, move_from_mem_to_reg, move_val_to_reg, assign_reg_to_var, reg_spill, mov_const_to_memory
+from codegen.regs import mov_reg_to_var_location, move_reg_to_memory, reg_map, get_empty_reg, get_reg_for, move_from_mem_to_reg, move_val_to_reg, assign_reg_to_var, reg_spill, mov_const_to_memory, mov_reg_to_var_location
 # to keep the track of the regs, if None then reg is free and can
 # be allocated. Otherwise, free the reg to the memspot on the stack
 reg_track = {}
@@ -96,15 +96,47 @@ def process(lines, var_info, asm, strlit_map, labels):
                 if rval not in var_info.keys():
                     mov_const_to_memory(rval, lval, var_info, asm)
                     continue
-
-                lreg = get_reg_for(lval, var_info, asm, reg_track, pref="eax")
-                move_val_to_reg(lreg, rval, var_info, asm, reg_track)
-                move_reg_to_memory(lreg, var_info, asm, reg_track)
+                
+                asm.add(asm_cmds.Comment(f"Getting reg for rval {rval}"))
+                rreg = get_reg_for(rval, var_info, asm, reg_track, pref="ecx")
+                asm.add(asm_cmds.Comment(f"mov from reg to mem {lval}"))
+                mov_reg_to_var_location(rreg, lval, var_info, asm)
             
             if len(cmd_toks) == 5 and cmd_toks[1] == '=': # binary operation
                 asm.add(asm_cmds.Comment("Binary Operation Code"))
                 op1 = cmd_toks[2]
                 op2 = cmd_toks[4]
+                
+                # check divison first
+                if cmd_toks[3] == "/": # divison
+                    asm.add(asm_cmds.Comment("Divison Code"))
+                    
+                    asm.add(asm_cmds.Comment("Fetch and spill rax"))
+                    for reg in reg_map["rax"]:
+                        if reg_track[reg]:
+                            move_from_mem_to_reg(reg, reg_track[reg], var_info, asm, reg_track)
+                            reg_spill(reg, var_info, asm, reg_track)
+
+                    asm.add(asm_cmds.Comment("Fetch and spill rdx"))
+                    for reg in reg_map["rdx"]:
+                        if reg_track[reg]:
+                            move_from_mem_to_reg(reg, reg_track[reg], var_info, asm, reg_track)
+                            reg_spill(reg, var_info, asm, reg_track)
+
+                    asm.add(asm_cmds.Comment(f"allocate eax to op1: {op1}"))
+                    op1_reg = get_empty_reg(op1, var_info, asm, "eax", reg_track)
+                    move_from_mem_to_reg(op1_reg, op1, var_info, asm, reg_track)
+
+                    asm.add(asm_cmds.Comment(f"allocate reg to op1: {op2}"))
+                    op2_reg = get_empty_reg(op2, var_info, asm, "ebx", reg_track)
+                    move_from_mem_to_reg(op2_reg, op2, var_info, asm, reg_track)
+                    
+                    asm.add(asm_cmds.Comment(f"CDQ then iDiv"))
+                    asm.add(asm_cmds.Cdq(None, None, None))
+                    asm.add(asm_cmds.Idiv(op2_reg, None, None))
+
+                    mov_reg_to_var_location("eax", cmd_toks[0], var_info, asm)
+                    continue
 
                 if cmd_toks[0] == op1:
                     op1_reg = get_reg_for(op1, var_info, asm, reg_track, pref="edx")
@@ -129,10 +161,6 @@ def process(lines, var_info, asm, strlit_map, labels):
                 if cmd_toks[3] == "*": # multiplication
                     asm.add(asm_cmds.Comment("Multiplication Code"))
                     asm.add(asm_cmds.Imul(op1_reg, op2_reg, 8))
-                
-                if cmd_toks[3] == "/": # divison
-                    asm.add(asm_cmds.Comment("Divison Code"))
-                    asm.add(asm_cmds.Idiv(op1_reg, op2_reg, 8))
                 
                 # move op1_reg to memory now
                 move_reg_to_memory(op1_reg, var_info, asm, reg_track)

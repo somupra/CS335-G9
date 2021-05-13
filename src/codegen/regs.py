@@ -117,6 +117,12 @@ def assign_reg_to_var(sreg, var, var_info, asm, reg_track):
     asm.add(asm_cmds.Comment(f"Assign reg to variable: {var}"))
     asm.add(asm_cmds.Mov(f"{size_map[var_size]}[rbp - {var_offset}]", sreg, 8))
 
+def mov_reg_to_var_location(sreg, var, var_info, asm):
+    var_size = var_info[var]["size"]
+    var_offset = var_info[var]["offset"] + var_size
+    asm.add(asm_cmds.Comment(f"Assign reg to variable: {var}"))
+    asm.add(asm_cmds.Mov(f"{size_map[var_size]}[rbp - {var_offset}]", sreg, 8))
+
 def mov_const_to_memory(const, var, var_info, asm):
     var_size = var_info[var]["size"]
     var_offset = var_info[var]["offset"] + var_size
