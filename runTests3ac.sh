@@ -6,18 +6,14 @@ test () {
 }
 
 # tests
+test 1
+test 2
+test 3
+test 4
+test 5
+test 6
 test 7
-dot -Tps output_raw.dot -o tree_result1.ps
-#test 2
-#dot -Tps output_raw.dot -o tree_result2.ps
-#test 3
-#dot -Tps output_raw.dot -o tree_result3.ps
-#test 4
-#dot -Tps output_raw.dot -o tree_result4.ps
-#test 5
-#dot -Tps output_raw.dot -o tree_result5.ps
 
-# cleanup pycache and out files
 [ -d ./src/__pycache__ ] && rm -rf ./src/__pycache__
 [ -f ./*.out ] && rm *.out
 [ -f ./*.o ] && rm *.o
