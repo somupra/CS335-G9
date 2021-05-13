@@ -245,14 +245,15 @@ def p_postfix_expression(p):
 	elif p[3]==')':
 		p[0] = p[1]
 		instr.append("call " + p[1].variables[0] + ", 0")
+		p[0].place = "ret-val"
 		if st.func_exists(p[1].variables[0]):
 			x = st.check_in_fs(p[1].variables[0])
 			p[0].type = x[2] #Return type of function
 		else:
 			print("\n Function not declared WARNING \n")
-			#messages.add(f'Error at line {p.lineno(3)}: Funcion does not exist')
 	elif p[2]=='(':
 		p[0] = Node("postfix_expression", [p[3]], p[1])
+		p[0].place = "ret-val"
 		if st.func_exists(p[1].variables[0]):
 			x = st.check_in_fs(p[1].variables[0])
 			p[0].type = x[2] #Return type of function
@@ -261,10 +262,8 @@ def p_postfix_expression(p):
 				messages.add(f'Error at line {p.lineno(2)}: Number of Arguments of function call do not match')
 		else:
 			print("\n Function not declared WARNING \n")
-			#messages.add(f'Error at line {p.lineno(2)}: Funcion does not exist')
 		for i in range(p[3].numof) :
 			instr.append("param " + p[3].param_list[i]+",scope"+str(st.checkscope()))
-
 		instr.append("call " + p[1].variables[0] + ", " + str(p[3].numof))
 	p[0].name = 'postfix_expression'
  		
@@ -337,9 +336,13 @@ def p_unary_expression(p):
 		p[0] = Node("unary_expression", [p[2]], p[1])
 		#Pointer referencing and dereferencing
 		if p[2].type[0:8]=='pointer_' and p[1].name=='unaryop_deref':
-			p[0].type=p[2].type[8:]
+			p[0].type = p[2].type[8:]
+			p[0].size = size[p[0].type]
+			p[0].place = 'value(' + p[2].place + ')'
 		elif p[1].name=='unaryop_ref':
 			p[0].type='pointer_'+p[2].type
+			p[0].size = 8
+			p[0].place = 'addr(' + p[2].place + ')'
 		else :
 			p[0].type = p[2].type
 			p[0].size = p[2].size
@@ -1913,15 +1916,17 @@ def p_jump_statement(p):
 			
 	elif (p[1] == 'return' and len(p)==3):
 		p[0] = Node('return', None, 'return')
-		#p[0].returnlist = p[2].nextlist
 		instr.append("return")
+		#p[0].returnlist = [len(instr)]
+		#instr.append("goto")
 		if len(func_type_list)>0 and func_type_list[-1]!='VOID' and func_type_list[-1]!='void':
 			messages.add(f'Error at line {p.lineno(1)}: Does not match function return type')
 				
 	else:
 		p[0] = Node('return', [p[2]], "return")
 		instr.append("return " + p[2].ret)
-		#p[0].returnlist = p[3].nextlist
+		#p[0].returnlist = [len(instr)]
+		#instr.append("goto")
 		if len(func_type_list)>0:
 			if p[2].type!=func_type_list[-1]:
 				if (p[2].type=='INT' and func_type_list[-1]=='FLOAT') or (p[2].type=='FLOAT' and func_type_list[-1]=='INT'):
@@ -1951,6 +1956,8 @@ def p_external_declaration(p):
 	'''
 	p[0] = p[1]
 	p[0].name = 'external_declaration'
+	#if(len(p)==3):
+	#	backpatch(p[1].nextlist, p[2].quad)
 
 def p_param_call(p):
 	'''
@@ -1973,6 +1980,7 @@ def p_function_definition(p):
 		p[0] = Node('func_defn_2',[p[1],p[2],p[4]],None)
 		p[2].type=p[1].type
 		p[0].type = p[1].type
+		p[0].nextlist = p[4].returnlist
 		if st.func_exists(p[2].variables[0]):
 			messages.add(f'Error at line {p.lineno(2)}: Function Redeclaration')
 		else:

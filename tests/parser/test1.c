@@ -1,14 +1,17 @@
+int add(int a, int b){
+	int c = 10 ;
+	if(a + b == c){
+		return 0 ;
+	}
+	return 1 ;
+}
 
 int main(){
-	int i ; 
-	int arr[100][200];
-	int b = 6;
-	int c = 4;
-	int d ;
-	for(i=0 ; i<100 ; i++){
-		b = arr[i] * arr[i+1] ;
-		c = arr[i] / arr[i+1] ;
-		d = b + c ;
-	}	
+	int x ; 
+	int y ;
+	int z ;
+	x = 5 ;
+	y = 9 ;
+	z = add(x, y) ;
 	return 0 ;
 }
