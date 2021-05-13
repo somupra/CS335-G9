@@ -32,9 +32,10 @@ class Node:
 		self.nextlist = []
 		self.breaklist = []
 		self.continuelist = []
+		self.returnlist = []
+		self.param_list = []
 		self.offset = 0
 		self.ret = typex
-		self.param_list = []
 		self.value = None #To store constants, for array size, say, a[10]
 		self.values_of_var = []
 		
@@ -203,6 +204,12 @@ def p_postfix_expression(p):
 		p[0].ret = p[1].ret
 	elif p[2]=='[':
 		p[0] = Node("postfix_expression", [p[3]], p[1])
+		p[0].type = p[1].type[3]
+		p[0].size = size[p[0].type]
+		x = newvar('INT')
+		instr.append(x + ' = ' + str(size[p[0].type]) + ' * ' + p[3].place)
+		p[0].place  = p[1].place + '[' + x + ']'
+		
 	elif p[2]=='++':
 		p[0] = Node("postfix_expression", [p[1]], p[2])#7
 		if(p[1].type == 'INT' or p[1].type == 'FLOAT'):
@@ -1670,6 +1677,7 @@ def p_statement(p):
 	p[0].nextlist = p[1].nextlist
 	p[0].breaklist = p[1].breaklist
 	p[0].continuelist = p[1].continuelist
+	p[0].returnlist = p[1].returnlist
 
 def p_labeled_statement(p):
 	'''
@@ -1704,6 +1712,7 @@ def p_compound_statement(p):
 		p[0].nextlist = p[2].nextlist
 		p[0].breaklist = p[2].breaklist
 		p[0].continuelist = p[2].continuelist
+		p[0].returnlist = p[2].returnlist
 		
 	elif len(p)==6:
 		p[0] = Node('compound_statement',[p[2],p[4]],'{}')
@@ -1714,6 +1723,7 @@ def p_compound_statement(p):
 		p[0].nextlist = p[4].nextlist
 		p[0].breaklist = p[4].breaklist
 		p[0].continuelist = p[4].continuelist
+		p[0].returnlist = p[4].returnlist
 		backpatch(p[2].nextlist, p[3].quad)
 	else:
 		p[0]=None
@@ -1761,6 +1771,8 @@ def p_statement_list(p):
 		p[0].nextlist = p[1].nextlist
 		p[0].breaklist = p[1].breaklist
 		p[0].continuelist = p[1].continuelist
+		p[0].returnlist = p[1].returnlist
+		
 	else:
 		p[0] = Node('stmt-list', [p[1], p[3]])
 		if (p[1].type == 'TYPE_ERROR' or p[3].type == 'TYPE_ERROR'):
@@ -1771,6 +1783,7 @@ def p_statement_list(p):
 		backpatch(p[1].nextlist, p[2].quad)
 		p[0].breaklist = p[1].breaklist + p[3].breaklist
 		p[0].continuelist = p[1].continuelist + p[3].continuelist
+		p[0].returnlist = p[1].returnlist + p[3].returnlist
 	p[0].name = 'statement_list'
 
 def p_expression_statement(p):
@@ -1803,6 +1816,7 @@ def p_selection_statement(p):
 		p[0].nextlist = p[3].falselist + p[6].nextlist
 		p[0].breaklist = p[6].breaklist 	
 		p[0].continuelist = p[6].continuelist
+		p[0].returnlist = p[6].returnlist
 		
 	elif (len(p) == 6):
 		p[0] = Node('switch', [p[3], p[5]], 'switch')
@@ -1821,6 +1835,7 @@ def p_selection_statement(p):
 		p[0].nextlist = p[6].nextlist + p[10].nextlist
 		p[0].breaklist = p[6].breaklist + p[10].breaklist
 		p[0].continuelist = p[6].continuelist + p[10].continuelist
+		p[0].returnlist = p[6].returnlist + p[10].returnlist
 		
 	p[0].name = 'selection_statement'
 
@@ -1849,6 +1864,7 @@ def p_iteration_statement(p):
 		backpatch(p[7].nextlist, p[3].quad)
 		backpatch(p[4].truelist, p[6].quad)
 		p[0].nextlist = p[4].falselist + p[7].breaklist
+		p[0].returnlist = p[7].returnlist
 	
 	elif len(p) == 11:
 		p[0] = Node('do-while', [p[3], p[8]], 'do-while')
@@ -1858,6 +1874,7 @@ def p_iteration_statement(p):
 		backpatch(p[4].nextlist, p[7].quad)
 		backpatch(p[8].truelist, p[2].quad)
 		p[0].nextlist = p[8].falselist + p[3].breaklist
+		p[0].returnlist = p[3].returnlist
 		
 	elif len(p) == 15:
 		p[0] = Node('for-with-update', [p[3], p[6], p[9],p[13]], 'for-with-update')
@@ -1870,7 +1887,8 @@ def p_iteration_statement(p):
 		p[14].nextlist = p[13].nextlist
 		backpatch(p[14].nextlist, p[8].quad)
 		backpatch(p[10].nextlist, p[5].quad)
-		p[0].nextlist = p[6].falselist + p[13].breaklist		
+		p[0].nextlist = p[6].falselist + p[13].breaklist
+		p[0].returnlist = p[13].returnlist
 	p[0].name = 'iteration_statement'
 
 def p_jump_statement(p):
@@ -1881,38 +1899,39 @@ def p_jump_statement(p):
 				   | RETURN SEMICOLON
 				   | RETURN expression SEMICOLON
 	'''
-	if len(p) == 4:
-		if (p[1] == 'goto'):
-			p[0] = Node('goto', p[2], "goto")
-			st.add_goto_ref(p[2],p.lineno(2))
-		elif(p[1] == 'break'): 
-			p[0] = Node('break', None, 'break')
-			p[0].breaklist = p[2].nextlist
-		elif (p[1] == 'continue'): 
-			p[0] = Node('continue', None, 'continue')
-			p[0].continuelist = p[2].nextlist
-		else:
-			p[0] = Node('return', [p[2]], "return")
-			instr.append("return " + p[2].ret)
-			if len(func_type_list)>0:
-				#print("\n**\n",func_type_list[-1],p[2].type)
-				if p[2].type!=func_type_list[-1]:
-					if (p[2].type=='INT' and func_type_list[-1]=='FLOAT') or (p[2].type=='FLOAT' and func_type_list[-1]=='INT'):
-						messages.add(f'Error at line {p.lineno(1)}: Does not match function return type, INT and FLOAT')
-					else:
-						messages.add(f'Error at line {p.lineno(1)}: Does not match function return type')
-	else:
-		if p[1] == 'return': 
-			p[0] = Node('return', None, 'return')
-			instr.append("return")
-			if len(func_type_list)>0 and func_type_list[-1]!='VOID' and func_type_list[-1]!='void':
-				#print("\n**\n",func_type_list[-1])
-				messages.add(f'Error at line {p.lineno(1)}: Does not match function return type')
-
-
+	if (p[1] == 'goto'):
+		p[0] = Node('goto', p[2], "goto")
+		st.add_goto_ref(p[2],p.lineno(2))
 		
+	elif(p[1] == 'break'): 
+		p[0] = Node('break', None, 'break')
+		p[0].breaklist = p[2].nextlist
+		
+	elif (p[1] == 'continue'): 
+		p[0] = Node('continue', None, 'continue')
+		p[0].continuelist = p[2].nextlist
+			
+	elif (p[1] == 'return' and len(p)==3):
+		p[0] = Node('return', None, 'return')
+		#p[0].returnlist = p[2].nextlist
+		instr.append("return")
+		if len(func_type_list)>0 and func_type_list[-1]!='VOID' and func_type_list[-1]!='void':
+			messages.add(f'Error at line {p.lineno(1)}: Does not match function return type')
+				
+	else:
+		p[0] = Node('return', [p[2]], "return")
+		instr.append("return " + p[2].ret)
+		#p[0].returnlist = p[3].nextlist
+		if len(func_type_list)>0:
+			if p[2].type!=func_type_list[-1]:
+				if (p[2].type=='INT' and func_type_list[-1]=='FLOAT') or (p[2].type=='FLOAT' and func_type_list[-1]=='INT'):
+					messages.add(f'Error at line {p.lineno(1)}: Does not match function return type, INT and FLOAT')
+				else:
+					messages.add(f'Error at line {p.lineno(1)}: Does not match function return type')
+			
 	p[0].name = 'jump_statement'
 	p[0].type = 'VOID'
+
 
 def p_translation_unit(p):
 	'''
