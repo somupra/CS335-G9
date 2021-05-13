@@ -117,14 +117,29 @@ class Lea:
     """Class for lea command."""
 
     name = "lea"
+    
+    reg_map = {
+            "rax": 	["rax", "eax", "ax", "al"],
+            "rbx": 	["rbx", "ebx", "bx", "bl"],
+            "rcx": 	["rcx", "ecx", "cx", "cl"],
+            "rdx": 	["rdx", "edx", "dx", "dl"],
+            "rsi": 	["rsi", "esi", "si", "sil"],
+            "rdi": 	["rdi", "edi", "di", "dil"],
+            "r8": 	["r8", "r8d", "r8w", "r8b"],
+            "r9": 	["r9", "r9d", "r9w", "r9b"],
+            "r10": 	["r10", "r10d", "r10w", "r10b"],
+            "r11": 	["r11", "r11d", "r11w", "r11b"],
+            "rbp": 	["rbp", "ebp", "", ""],
+            "rsp": 	["rsp", "esp", "", ""]
+        }
 
     def __init__(self, dest, source):  
         self.dest = dest
         self.source = source
 
     def __str__(self):  
-        return ("\t" + self.name + " " + self.dest.asm_str(8) + ", "
-                "" + self.source.asm_str(0))
+        return ("\t" + self.name + " " + self.dest + ", "
+                "" + self.source)
 
 
 class Je(_JumpCommand): name = "je"  
