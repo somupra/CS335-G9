@@ -119,6 +119,14 @@ def process(lines, var_info, asm, strlit_map):
                     asm.add(asm_cmds.Comment("Subtraction Code"))
                     asm.add(asm_cmds.Sub(op1_reg, op2_reg, 8))
                 
+                if cmd_toks[3] == "*": # multiplication
+                    asm.add(asm_cmds.Comment("Multiplication Code"))
+                    asm.add(asm_cmds.Imul(op1_reg, op2_reg, 8))
+                
+                if cmd_toks[3] == "/": # divison
+                    asm.add(asm_cmds.Comment("Divison Code"))
+                    asm.add(asm_cmds.Idiv(op1_reg, op2_reg, 8))
+                
         
         if cmd_toks[0] == 'return':
             ret_val = cmd_toks[1]
@@ -167,7 +175,7 @@ def process(lines, var_info, asm, strlit_map):
 
         if cmd_toks[0] == "call":
             param_num = 0 # reset param_num variable
-            
+
             fname = cmd_toks[1][: -1]
             asm.add(asm_cmds.Comment(f"Function call for: {fname}"))
 
