@@ -49,8 +49,8 @@ def get_reg_for(val, var_info, asm, reg_track):
     if val not in var_info.keys(): return val
 
     # check if a live register is there
-    for k, v in reg_track.items():
-        if v == val: return k 
+    for reg, v in reg_track.items():
+        if v == val: return reg
     
     # no live reg for val, assign new reg if empty
     priority = ["eax", "ebx", "ecx", "edx", "esi", "edi"]
@@ -62,14 +62,14 @@ def get_reg_for(val, var_info, asm, reg_track):
     # all regs are filled, spill a reg and allocate it to val
     # we will spill eax always
     reg_spill("eax", var_info, asm, reg_track)
+    reg_track["eax"] = val 
 
     # allocate eax to val
     move_from_mem_to_reg("eax", val, var_info, asm, reg_track)
     return "eax"
 
 def get_empty_reg(var, var_info, asm, rname, reg_track):
-    if reg_track[rname]: # spill it
-        reg_spill(rname, var_info, asm, reg_track)
+    reg_spill(rname, var_info, asm, reg_track)
     reg_track[rname] = var
     return rname
 

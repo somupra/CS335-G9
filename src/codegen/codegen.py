@@ -27,7 +27,7 @@ class AsmCode:
         self.data.append(f"{name}:")
         size_strs = {1: "byte",
                      2: "word",
-                     8: "int",
+                     4: "int",
                      8: "quad"}
 
         if init:
@@ -118,6 +118,7 @@ def process(lines, var_info, asm, strlit_map):
                 if cmd_toks[3] == "-": # subtraction
                     asm.add(asm_cmds.Comment("Subtraction Code"))
                     asm.add(asm_cmds.Sub(op1_reg, op2_reg, 8))
+                
         
         if cmd_toks[0] == 'return':
             ret_val = cmd_toks[1]
@@ -140,12 +141,14 @@ def process(lines, var_info, asm, strlit_map):
 
             if callee not in st.allsymboltables[0].functions.keys():
                 arg_reg = reg_pref[param_num - 1]
+                # spill the arg reg
+                for reg in reg_map[arg_reg]:
+                    reg_spill(reg, var_info, asm, reg_track)
+
                 param_val = line[1][6: line[1].rfind(",")]
                 if param_val[0] == '\"': param_val = param_val[1:-1]
 
                 if param_val in strlit_map.keys():
-                    # empty the arg register
-                    reg_spill(arg_reg, var_info, asm, reg_track)
                     asm.add(asm_cmds.Comment("Address of symbol to arg register"))
                     asm.add(asm_cmds.Lea(arg_reg, f'[{strlit_map[param_val]}]'))
                 else:
@@ -160,13 +163,16 @@ def process(lines, var_info, asm, strlit_map):
                     }
                     param_size = var_info[param_val]["size"]
                     arg_reg = reg_map[arg_reg][size_map[param_size]]
-                    reg_spill(arg_reg, var_info, asm, reg_track)
                     move_val_to_reg(arg_reg, param_val, var_info, asm, reg_track)
 
         if cmd_toks[0] == "call":
+            param_num = 0 # reset param_num variable
+            
             fname = cmd_toks[1][: -1]
             asm.add(asm_cmds.Comment(f"Function call for: {fname}"))
-            reg_spill("rax", var_info, asm, reg_track)
+
+            for reg in reg_map["rax"]:
+                reg_spill(reg, var_info, asm, reg_track)
             asm.add(asm_cmds.Lea("rax", f"[{fname}]"))
             asm.add(asm_cmds.Call("rax", None, 8))
 
@@ -231,6 +237,7 @@ def assemble(code_3ac):
         # sub rsp, max_offset
         # to find max_offset add up all the offsets
         max_offset = st.get_max_fn_offset(fname)
+        print(max_offset)
         asm.add(asm_cmds.Sub("rsp", max_offset, 8))
 
         # get variable info

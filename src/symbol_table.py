@@ -183,7 +183,10 @@ def check_in_fs(name):
 def get_max_fn_offset(fname):
     fn_symtab = allsymboltables[check_in_fs(fname)[0]]
     offsets = [var for var in fn_symtab.variables.values()]
-    return offsets[-1]["offset"] + offsets[-1]["size"]
+    max_offset = offsets[-1]["offset"] + offsets[-1]["size"]
+    if max_offset % 16 != 0:
+            max_offset += 16 - max_offset % 16
+    return max_offset
 
 def get_var_info(fname):
     fn_symtab = allsymboltables[check_in_fs(fname)[0]]
