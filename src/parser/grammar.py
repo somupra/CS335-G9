@@ -249,7 +249,7 @@ def p_postfix_expression(p):
 			x = st.check_in_fs(p[1].variables[0])
 			p[0].type = x[2] #Return type of function
 		else:
-			print("\n Function not declared WARNING \n")
+			if p[1].variables[0] != "printf": print("\n Function not declared WARNING \n")
 	elif p[2]=='(':
 		p[0] = Node("postfix_expression", [p[3]], p[1])
 		p[0].place = "ret-val"
@@ -260,7 +260,7 @@ def p_postfix_expression(p):
 			if x[1]!=p[3].numof:
 				messages.add(f'Error at line {p.lineno(2)}: Number of Arguments of function call do not match')
 		else:
-			print("\n Function not declared WARNING \n")
+			if p[1].variables[0] != "printf": print("\n Function not declared WARNING \n")
 		for i in range(p[3].numof) :
 			instr.append("param " + p[3].param_list[i]+",scope"+str(st.checkscope()))
 		instr.append("call " + p[1].variables[0] + ", " + str(p[3].numof))
